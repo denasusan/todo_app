@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:todo_app/home.dart';
 
 void main() {
   runApp(MyApp());
@@ -29,14 +30,17 @@ class MyHomePage extends StatelessWidget {
               style: TextStyle(fontSize: 24.0),
             ),
             SizedBox(height: 20.0),
-            Image.asset(
-              'assets/img/hero.png',
-              width: 200.0,
-              height: 200.0,
-            ),
+            // Image.asset(
+            //   'assets/img/hero.png',
+            //   width: 200.0,
+            //   height: 200.0,
+            // ),
             SizedBox(height: 20.0),
             ElevatedButton(
-              onPressed: () {},
+              onPressed: () {
+                Navigator.push(context,
+                    MaterialPageRoute(builder: (context) => HomeScreen()));
+              },
               child: Text('Get Started'),
             ),
           ],
