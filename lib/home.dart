@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:todo_app/main.dart';
+import 'package:todo_app/screens/manage_label_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -22,10 +23,10 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
         actions: [
           Container(
-            margin: EdgeInsets.only(top: 8.0, bottom: 4.0, left: 10.0, right: 10.0),
-            child: 
-                const Image(
-                    image: AssetImage('assets/images/notification_icon.png')),
+            margin:
+                EdgeInsets.only(top: 8.0, bottom: 4.0, left: 10.0, right: 10.0),
+            child: const Image(
+                image: AssetImage('assets/images/notification_icon.png')),
           )
         ],
       ),
@@ -331,7 +332,12 @@ class _HomeScreenState extends State<HomeScreen> {
                   mainAxisAlignment: MainAxisAlignment.spaceAround,
                   children: [
                     GestureDetector(
-                      onTap: () => {},
+                      onTap: () => {
+                        Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                                builder: (context) => ManageLabelScreen()))
+                      },
                       child: Container(
                         width: MediaQuery.of(context).size.width / 3,
                         height: MediaQuery.of(context).size.width / 3,
