@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:todo_app/home.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
+import 'package:todo_app/screens/login_screen.dart';
 
 final Color BLACK_CUSTOM = const Color(0xFF000000);
 final Color GREEN_PRIMARY = const Color(0xFF4EA949);
@@ -77,7 +78,7 @@ class MyHomePage extends StatelessWidget {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => HomeScreen(),
+                    builder: (context) => LoginScreen(),
                   ),
                 );
               },

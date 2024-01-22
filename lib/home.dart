@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:todo_app/main.dart';
+import 'package:todo_app/screens/login_screen.dart';
 import 'package:todo_app/screens/manage_label_screen.dart';
+import 'package:todo_app/services/shared_preference_service.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -10,10 +12,135 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
+  final _formKey = GlobalKey<FormState>();
+  var _usernameController = TextEditingController();
+  var _emailController = TextEditingController();
+
+  late String _username = "", _email = "";
+
+  void _showProfileDialog() {
+    _emailController.text = _email;
+    _usernameController.text = _username;
+    showDialog<void>(
+      context: context,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return AlertDialog(
+              content: Form(
+                key: _formKey,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: <Widget>[
+                    Align(
+                      alignment: Alignment.centerRight,
+                      child: ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.green.shade400,
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(
+                            vertical: 15.0,
+                            horizontal: 20.0,
+                          ),
+                        ),
+                        child: const Text('Save'),
+                        onPressed: () {
+                          if (_formKey.currentState!.validate()) {
+                            _formKey.currentState!.save();
+                          }
+                        },
+                      ),
+                    ),
+                    const SizedBox(
+                      height: 20.0,
+                    ),
+                    const Text(
+                      'Username',
+                      style: TextStyle(fontWeight: FontWeight.w600),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 10),
+                      child: TextFormField(
+                        keyboardType: TextInputType.name,
+                        controller: _usernameController,
+                        decoration: const InputDecoration(
+                          border: OutlineInputBorder(),
+                          hintText: "Enter your username",
+                        ),
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'username cannot be empty';
+                          }
+                          return null;
+                        },
+                      ),
+                    ),
+                    const Text(
+                      'Email',
+                      style: TextStyle(fontWeight: FontWeight.w600),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 10),
+                      child: TextFormField(
+                        keyboardType: TextInputType.name,
+                        controller: _emailController,
+                        decoration: const InputDecoration(
+                          border: OutlineInputBorder(),
+                          hintText: "Enter your email",
+                        ),
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Email cannot be empty';
+                          }
+                          return null;
+                        },
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  void _getUserData() async {
+    final SharedPreferencesService pref =
+        await SharedPreferencesService.getInstance();
+
+    if (!context.mounted) return;
+
+    if (pref.getData('is_login')) {
+      setState(() {
+        _username = pref.getData('username') ?? "";
+        _email = pref.getData('email');
+      });
+    } else {
+      Navigator.push(context,
+          MaterialPageRoute(builder: (context) => const LoginScreen()));
+    }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+
+    _getUserData();
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        automaticallyImplyLeading: false,
         title: Text(
           "KanbanWa",
           style: TextStyle(
@@ -58,7 +185,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           width: 5.0,
                         ),
                         Text(
-                          "Kamu",
+                          _username.isEmpty ? _email : "Kamu",
                           style: TextStyle(
                               color: GREEN_PRIMARY,
                               fontSize: 20.0,
@@ -381,7 +508,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                     ),
                     GestureDetector(
-                      onTap: () => {},
+                      onTap: () => _showProfileDialog(),
                       child: Container(
                         width: MediaQuery.of(context).size.width / 3,
                         height: MediaQuery.of(context).size.width / 3,

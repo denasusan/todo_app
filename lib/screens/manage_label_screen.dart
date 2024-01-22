@@ -200,7 +200,7 @@ class _ManageLabelScreenState extends State<ManageLabelScreen> {
               return true;
             },
             child: ListView.builder(
-              itemCount: 20,
+              itemCount: 10,
               itemBuilder: (context, index) {
                 return Container(
                   margin: const EdgeInsets.symmetric(
