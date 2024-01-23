@@ -73,6 +73,16 @@ flutter:
     - assets/images/manage_label_button.png
     - assets/images/profile_button.png
     - assets/images/hero.png
+    - assets/images/home_header_icon.png
+    - assets/images/search_icon.png
+    - assets/images/clock_icon.png
+    - assets/images/menu_icon.png
+    - assets/images/on_progress_white.png
+    - assets/images/done_white.png
+    - assets/images/to_do_white.png
+    - assets/images/on_progress_green.png
+    - assets/images/done_green.png
+    - assets/images/to_do_green.png
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/assets-and-images/#resolution-aware

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:todo_app/main.dart';
 import 'package:todo_app/screens/login_screen.dart';
 import 'package:todo_app/screens/manage_label_screen.dart';
+import 'package:todo_app/screens/todo_screen.dart';
 import 'package:todo_app/services/shared_preference_service.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -311,7 +312,12 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                     ),
                     GestureDetector(
-                      onTap: () => {},
+                      onTap: () => {
+                        Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                                builder: (context) => TodoScreen()))
+                      },
                       child: Container(
                         width: MediaQuery.of(context).size.width / 3,
                         height: MediaQuery.of(context).size.width / 3,
