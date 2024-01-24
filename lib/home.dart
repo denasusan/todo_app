@@ -4,6 +4,7 @@ import 'package:todo_app/screens/login_screen.dart';
 import 'package:todo_app/screens/manage_label_screen.dart';
 import 'package:todo_app/screens/todo_screen.dart';
 import 'package:todo_app/services/shared_preference_service.dart';
+import 'package:todo_app/screens/add_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -268,7 +269,12 @@ class _HomeScreenState extends State<HomeScreen> {
                   mainAxisAlignment: MainAxisAlignment.spaceAround,
                   children: [
                     GestureDetector(
-                      onTap: () => {},
+                      onTap: () => {
+                        Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                                builder: (context) => AddScreen()))
+                      },
                       child: Container(
                         width: MediaQuery.of(context).size.width / 3,
                         height: MediaQuery.of(context).size.width / 3,
