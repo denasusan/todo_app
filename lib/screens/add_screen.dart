@@ -121,7 +121,7 @@ class _AddScreenState extends State<AddScreen> {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => TodoScreen(),
+                    builder: (context) => TodoScreen(tab: 0,),
                   ),
                 );
               },

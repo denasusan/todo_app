@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
+import 'package:todo_app/home.dart';
+import 'package:todo_app/main.dart';
 // import 'package:todo_app/widgets/label_card.dart';
 
 class ManageLabelScreen extends StatefulWidget {
@@ -165,85 +167,109 @@ class _ManageLabelScreenState extends State<ManageLabelScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Colors.white,
-        foregroundColor: Colors.green.shade400,
-        leading: IconButton(
-          icon: const Icon(Icons.home),
-          onPressed: () {},
+        leading: Container(
+          width: 32.0,
+          height: 32.0,
+          margin: EdgeInsets.all(5.0),
+          child: GestureDetector(
+            onTap: () {
+              Route route =
+                  MaterialPageRoute(builder: (context) => HomeScreen());
+              Navigator.pushReplacement(context, route);
+            },
+            child: Image(
+              image: AssetImage('assets/images/home_header_icon.png'),
+            ),
+          ),
+        ),
+        title: Text(
+          'To-Do List',
+          style: TextStyle(
+              fontSize: 20.0,
+              fontWeight: FontWeight.w600,
+              color: GREEN_PRIMARY),
         ),
         actions: [
-          Padding(
-            padding: const EdgeInsets.only(right: 10.0),
-            child: IconButton(onPressed: () {}, icon: const Icon(Icons.search)),
+          Container(
+            width: 32.0,
+            height: 32.0,
+            margin: EdgeInsets.all(5.0),
+            child: Image(
+              image: AssetImage('assets/images/search_icon.png'),
+              width: 32.0,
+              height: 32.0,
+            ),
           )
         ],
-        elevation: 0,
-        title: const Text(
-          'Label List',
-          style: TextStyle(fontWeight: FontWeight.w600),
-        ),
-        centerTitle: true,
       ),
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(0, 10, 0, 10),
-          child: NotificationListener<UserScrollNotification>(
-            onNotification: (notification) {
-              final ScrollDirection direction = notification.direction;
-              setState(() {
-                if (direction == ScrollDirection.reverse) {
-                  _showFab = false;
-                } else if (direction == ScrollDirection.forward) {
-                  _showFab = true;
-                }
-              });
-              return true;
-            },
-            child: ListView.builder(
-              itemCount: 10,
-              itemBuilder: (context, index) {
-                return Container(
-                  margin: const EdgeInsets.symmetric(
-                    vertical: 5.0,
-                    horizontal: 10.0,
+      body: SingleChildScrollView(
+        child: Column(
+          children: <int>[1, 2, 3, 4, 5, 6, 7, 8, 9]
+              .map(
+                (e) => Container(
+                  padding: EdgeInsets.only(
+                    left: 5.0,
                   ),
-                  padding: const EdgeInsets.all(5.0),
+                  margin: EdgeInsets.only(
+                      left: 10, right: 10, top: 5.0, bottom: 5.0),
                   decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(10.0),
+                    borderRadius: BorderRadius.circular(15),
+                    color: Color(0xFFF8F9FA),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.grey.shade300,
-                        blurRadius: 5,
-                        spreadRadius: 1,
+                        color: const Color.fromARGB(255, 213, 213, 213),
+                        blurRadius: 5.0, // soften the shadow
+                        offset: Offset(
+                          0.0, // Move to right 10  horizontally
+                          6.0, // Move to bottom 10 Vertically
+                        ),
                       ),
                     ],
                   ),
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          IconButton(
-                            onPressed: () {},
-                            splashRadius: 1,
-                            icon: const Icon(Icons.delete),
+                          Row(
+                            children: [
+                              Text(
+                                'Perkuliahan',
+                                style: TextStyle(
+                                    fontSize: 10.0,
+                                    fontWeight: FontWeight.w500,
+                                    color: Colors.black),
+                              )
+                            ],
                           ),
-                          Text("labelName"),
+                          DropdownButtonHideUnderline(
+                            child: DropdownButton<String>(
+                              dropdownColor: Colors.white,
+                              style: TextStyle(color: Color(0xFF001A72)),
+                              icon: Image(
+                                image:
+                                    AssetImage('assets/images/menu_icon.png'),
+                                width: 24.0,
+                                height: 24.0,
+                              ),
+                              items: <String>['Edit', 'Delete']
+                                  .map((String value) {
+                                return DropdownMenuItem<String>(
+                                  value: value,
+                                  child: Text(value),
+                                );
+                              }).toList(),
+                              onChanged: (String? value) {},
+                            ),
+                          )
                         ],
-                      ),
-                      IconButton(
-                        onPressed: () {},
-                        splashRadius: 1,
-                        icon: const Icon(Icons.edit),
                       )
                     ],
                   ),
-                );
-              },
-            ),
-          ),
+                ),
+              )
+              .toList(),
         ),
       ),
       floatingActionButton: AnimatedSlide(
@@ -253,7 +279,11 @@ class _ManageLabelScreenState extends State<ManageLabelScreen> {
           onPressed: showLabelDialog,
           foregroundColor: Colors.white,
           backgroundColor: Colors.green.shade400,
-          child: const Icon(Icons.add),
+          child: Image(
+            image: AssetImage('assets/images/add_label_floating_button.png'),
+            width: 24.0,
+            height: 24.0,
+          ),
         ),
       ),
     );

@@ -253,7 +253,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       ],
                     ),
                     Image(
-                      image: AssetImage('assets/images/home_icon.png'),
+                      image: AssetImage('assets/images/home_banner_icon.png'),
                       // width: MediaQuery.of(context).size.width / 3,
                       // height: MediaQuery.of(context).size.width / 4,
                     ),
@@ -322,7 +322,9 @@ class _HomeScreenState extends State<HomeScreen> {
                         Navigator.push(
                             context,
                             MaterialPageRoute(
-                                builder: (context) => TodoScreen()))
+                                builder: (context) => TodoScreen(
+                                      tab: 0,
+                                    )))
                       },
                       child: Container(
                         width: MediaQuery.of(context).size.width / 3,
@@ -375,7 +377,14 @@ class _HomeScreenState extends State<HomeScreen> {
                   mainAxisAlignment: MainAxisAlignment.spaceAround,
                   children: [
                     GestureDetector(
-                      onTap: () => {},
+                      onTap: () => {
+                        Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                                builder: (context) => TodoScreen(
+                                      tab: 1,
+                                    )))
+                      },
                       child: Container(
                         width: MediaQuery.of(context).size.width / 3,
                         height: MediaQuery.of(context).size.width / 3,
@@ -419,7 +428,12 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                     ),
                     GestureDetector(
-                      onTap: () => {},
+                      onTap: () => {
+                        Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                                builder: (context) => TodoScreen(tab: 2,)))
+                      },
                       child: Container(
                         width: MediaQuery.of(context).size.width / 3,
                         height: MediaQuery.of(context).size.width / 3,

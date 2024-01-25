@@ -85,6 +85,9 @@ flutter:
     - assets/images/done_green.png
     - assets/images/to_do_green.png
     - assets/images/back.png
+    - assets/images/add_label_floating_button.png
+    - assets/images/add_to_do_floating_button.png
+    - assets/images/home_banner_icon.png
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/assets-and-images/#resolution-aware

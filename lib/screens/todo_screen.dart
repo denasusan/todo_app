@@ -1,9 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:todo_app/components/done_screen.dart';
+import 'package:todo_app/components/in_process_screen.dart';
+import 'package:todo_app/home.dart';
 import 'package:todo_app/main.dart';
 import 'package:todo_app/screens/edit_screen.dart';
 
 class TodoScreen extends StatefulWidget {
-  TodoScreen({Key? key}) : super(key: key);
+  final int tab;
+  TodoScreen({
+    Key? key,
+    required this.tab
+  }) : super(key: key);
 
   @override
   State<TodoScreen> createState() => _TodoScreenState();
@@ -11,6 +18,13 @@ class TodoScreen extends StatefulWidget {
 
 class _TodoScreenState extends State<TodoScreen> {
   int _selectedTab = 0;
+
+  @override
+  void initState() {
+    // TODO: implement initState
+    _selectedTab = widget.tab;
+    super.initState();
+  }
 
   List _pages = [
     Center(
@@ -44,12 +58,19 @@ class _TodoScreenState extends State<TodoScreen> {
           width: 32.0,
           height: 32.0,
           margin: EdgeInsets.all(5.0),
-          child: Image(
-            image: AssetImage('assets/images/home_header_icon.png'),
+          child: GestureDetector(
+            onTap: () {
+              Route route =
+                  MaterialPageRoute(builder: (context) => HomeScreen());
+              Navigator.pushReplacement(context, route);
+            },
+            child: Image(
+              image: AssetImage('assets/images/home_header_icon.png'),
+            ),
           ),
         ),
         title: Text(
-          'To-Do List',
+          _selectedTab == 0 ? 'To Do List' : _selectedTab == 1 ? "In Process List" : "Done List",
           style: TextStyle(
               fontSize: 20.0,
               fontWeight: FontWeight.w600,
@@ -68,9 +89,9 @@ class _TodoScreenState extends State<TodoScreen> {
           )
         ],
       ),
-      body: SingleChildScrollView(
+      body:  _selectedTab == 1 ? InProcessScreen() : _selectedTab == 1 ? DoneScreen() : SingleChildScrollView(
         child: Column(
-          children: <int>[1, 2, 3, 4, 5, 6, 7, 8, 9]
+          children:<int>[1, 2, 3, 4, 5, 6, 7, 8, 9]
               .map(
                 (e) => Container(
                   padding: EdgeInsets.only(
@@ -201,6 +222,25 @@ class _TodoScreenState extends State<TodoScreen> {
               .toList(),
         ),
       ),
+      floatingActionButton: _selectedTab == 0 ? FloatingActionButton(
+        onPressed: () {},
+        foregroundColor: Colors.white,
+        backgroundColor: YELLOW_CUSTOM,
+        shape: RoundedRectangleBorder(
+          // <= Change BeveledRectangleBorder to RoundedRectangularBorder
+          borderRadius: BorderRadius.only(
+            topLeft: Radius.circular(30.0),
+            topRight: Radius.circular(10.0),
+            bottomLeft: Radius.circular(30.0),
+            bottomRight: Radius.circular(30.0),
+          ),
+        ),
+        child: Image(
+          image: AssetImage('assets/images/add_to_do_floating_button.png'),
+          width: 24.0,
+          height: 24.0,
+        ),
+      ) : null,
       bottomNavigationBar: Container(
         padding: EdgeInsets.all(0.0),
         decoration: BoxDecoration(

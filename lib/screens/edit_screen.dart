@@ -208,7 +208,7 @@ class _EdiScreenState extends State<EditScreen> {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => TodoScreen(),
+                    builder: (context) => TodoScreen(tab: 0,),
                   ),
                 );
               },
