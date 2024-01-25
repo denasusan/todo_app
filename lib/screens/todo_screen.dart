@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:todo_app/main.dart';
+import 'package:todo_app/screens/edit_screen.dart';
 
 class TodoScreen extends StatefulWidget {
   TodoScreen({Key? key}) : super(key: key);
@@ -180,7 +181,15 @@ class _TodoScreenState extends State<TodoScreen> {
                                   child: Text(value),
                                 );
                               }).toList(),
-                              onChanged: (_) {},
+                              onChanged: (String? value) {
+                                if (value == 'Edit') {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                        builder: (context) => EditScreen()),
+                                  );
+                                }
+                              },
                             ),
                           )
                         ],
@@ -254,15 +263,16 @@ class _TodoScreenState extends State<TodoScreen> {
                           padding: EdgeInsets.all(10.0),
                           child: Column(children: [
                             Image(
-                              image:
-                                  AssetImage('assets/images/on_progress_green.png'),
+                              image: AssetImage(
+                                  'assets/images/on_progress_green.png'),
                             ),
                           ]),
                         ),
                       )
                     : Column(children: [
                         Image(
-                          image: AssetImage('assets/images/on_progress_white.png'),
+                          image:
+                              AssetImage('assets/images/on_progress_white.png'),
                         ),
                         SizedBox(height: 5.0),
                         Text(
@@ -284,8 +294,7 @@ class _TodoScreenState extends State<TodoScreen> {
                           padding: EdgeInsets.all(10.0),
                           child: Column(children: [
                             Image(
-                              image:
-                                  AssetImage('assets/images/done_green.png'),
+                              image: AssetImage('assets/images/done_green.png'),
                             ),
                           ]),
                         ),
