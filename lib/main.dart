@@ -39,6 +39,47 @@ void deleteUser() async {
   await users.doc("dena@gmail.com").delete();
 }
 
+void addUserByModel() async
+{
+  final FirebaseFirestore db = FirebaseFirestore.instance;
+
+  final userData = User(user_email: "fikri@gmail.com", user_name: "Fikri");
+  final docRef = db.collection('users').withConverter(
+    fromFirestore: User.fromFirestore, 
+    toFirestore: (User user, options) => user.toFirestore()
+    );
+  await docRef.doc("fikri@gmail.com").set(userData); 
+}
+
+void updateUserByModel() async
+{
+  final FirebaseFirestore db = FirebaseFirestore.instance;
+
+  // final userData = User(user_email: "fikri@gmail.com", user_name: "Fikri New");
+  final docRef = db.collection('users');
+  await docRef.doc("fikri@gmail.com").update({
+    "user_name":"Fikri New",
+  }); 
+}
+
+void readUserByModel() async
+{
+  final FirebaseFirestore db = FirebaseFirestore.instance;
+
+  // final userData = User(user_email: "fikri@gmail.com", user_name: "Fikri New");
+  final docRef = db.collection('users');
+  docRef.get().then(
+    (querySnapshot) {
+      
+      for (var docSnapshot in querySnapshot.docs) {
+        User user = new User(user_name: docSnapshot.data()['user_name'], user_email: docSnapshot.data()['user_name']);
+        print('${docSnapshot.id} => ${user.user_name}');
+      }
+    },
+    onError: (e) => print("Error completing: $e"),
+  );
+}
+
 void main() async {
   WidgetsBinding widgetsBinding = WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(
@@ -52,16 +93,19 @@ void main() async {
   final CollectionReference users = db.collection("users");
   // addUser();
   // updateUser();
-  deleteUser();
-  users.get().then(
-    (querySnapshot) {
-      print("Successfully completed");
-      for (var docSnapshot in querySnapshot.docs) {
-        print('${docSnapshot.id} => ${docSnapshot.data()}');
-      }
-    },
-    onError: (e) => print("Error completing: $e"),
-  );
+  // deleteUser();
+  // addUserByModel();
+  updateUserByModel();
+  readUserByModel();
+  // users.get().then(
+  //   (querySnapshot) {
+  //     print("Successfully completed");
+  //     for (var docSnapshot in querySnapshot.docs) {
+  //       print('${docSnapshot.id} => ${docSnapshot.data()}');
+  //     }
+  //   },
+  //   onError: (e) => print("Error completing: $e"),
+  // );
 
   
   FlutterNativeSplash.preserve(widgetsBinding: widgetsBinding);
