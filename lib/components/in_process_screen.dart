@@ -70,15 +70,6 @@ class _InProcessScreenState extends State<InProcessScreen> {
     return dataLabel;
   }
 
-  void deleteTask(String doc) async {
-    final FirebaseFirestore db = FirebaseFirestore.instance;
-    final CollectionReference users = db.collection("tasks");
-    await users.doc(doc).delete();
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(builder: (context) => TodoScreen(tab: 1,)),
-    );
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -186,7 +177,7 @@ class _InProcessScreenState extends State<InProcessScreen> {
                           width: 24.0,
                           height: 24.0,
                         ),
-                        items: <String>['Edit', 'Delete'].map((String value) {
+                        items: <String>['Edit'].map((String value) {
                           return DropdownMenuItem<String>(
                             value: value,
                             child: Text(value),
@@ -199,8 +190,6 @@ class _InProcessScreenState extends State<InProcessScreen> {
                               MaterialPageRoute(
                                   builder: (context) => EditScreen()),
                             );
-                          } else if (value == 'Delete') {
-                            deleteTask(e.task_id);
                           }
                         },
                       ),
