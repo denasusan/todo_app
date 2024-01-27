@@ -198,7 +198,7 @@ class _DoneScreenState extends State<DoneScreen> {
                             Navigator.push(
                               context,
                               MaterialPageRoute(
-                                  builder: (context) => EditScreen()),
+                                  builder: (context) => EditScreen(task: e)),
                             );
                           }
                         },
