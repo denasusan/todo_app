@@ -278,8 +278,9 @@ class _TodoScreenState extends State<TodoScreen> {
                                         Navigator.push(
                                           context,
                                           MaterialPageRoute(
-                                              builder: (context) =>
-                                                  EditScreen()),
+                                            builder: (context) =>
+                                                EditScreen(task: e),
+                                          ),
                                         );
                                       } else if (value == 'Delete') {
                                         deleteTask(e.task_id);

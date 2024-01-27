@@ -70,7 +70,6 @@ class _InProcessScreenState extends State<InProcessScreen> {
     return dataLabel;
   }
 
-
   @override
   Widget build(BuildContext context) {
     return SingleChildScrollView(
@@ -160,7 +159,7 @@ class _InProcessScreenState extends State<InProcessScreen> {
                           width: 5.0,
                         ),
                         Text(
-                          "${e.due_date.day}, ${month[e.due_date.month-1]} ${e.due_date.year}",
+                          "${e.due_date.day}, ${month[e.due_date.month - 1]} ${e.due_date.year}",
                           style: TextStyle(
                               fontSize: 10.0,
                               fontWeight: FontWeight.w500,
@@ -188,7 +187,7 @@ class _InProcessScreenState extends State<InProcessScreen> {
                             Navigator.push(
                               context,
                               MaterialPageRoute(
-                                  builder: (context) => EditScreen()),
+                                  builder: (context) => EditScreen(task: e)),
                             );
                           }
                         },

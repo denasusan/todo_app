@@ -1,20 +1,54 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:todo_app/screens/todo_screen.dart';
 import 'package:flutter_typeahead/flutter_typeahead.dart';
+import 'package:todo_app/model/task.dart';
 
 class EditScreen extends StatefulWidget {
-  EditScreen({Key? key}) : super(key: key);
+  final Task task;
+
+  EditScreen({Key? key, required this.task}) : super(key: key);
 
   @override
-  State<EditScreen> createState() => _EdiScreenState();
+  State<EditScreen> createState() => _EditScreenState();
 }
 
-class _EdiScreenState extends State<EditScreen> {
-  DateTime _startDate = DateTime.now();
-  DateTime _endDate = DateTime.now();
-  String _status = 'New';
-  bool _isAssigned = true;
-  String _assignedTo = '';
+class _EditScreenState extends State<EditScreen> {
+  late DateTime _startDate;
+  late DateTime _endDate;
+  late String _status;
+  late bool _isAssigned;
+  late String _assignedTo;
+  TextEditingController _nameController = TextEditingController();
+  TextEditingController _labelController = TextEditingController();
+  TextEditingController _descriptionController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    _startDate = widget.task.start_date;
+    _endDate = widget.task.due_date;
+    _status = widget.task.task_status;
+    _isAssigned = widget.task.is_visible;
+
+    _nameController.text = widget.task.task_name;
+    _labelController.text = widget.task.label_id.id;
+    _descriptionController.text = widget.task.task_description;
+  }
+
+  Future<List<String>> getStatusValuesFromDatabase() async {
+    QuerySnapshot<Map<String, dynamic>> snapshot =
+        await FirebaseFirestore.instance.collection('tasks').get();
+
+    List<String> statusValues = snapshot.docs
+        .map<String?>((doc) => doc['task_status'] as String?)
+        .where((taskStatus) => taskStatus != null)
+        .cast<String>()
+        .toSet()
+        .toList();
+
+    return statusValues;
+  }
 
   Future<void> _selectStartDate(BuildContext context) async {
     final DateTime? picked = await showDatePicker(
@@ -50,12 +84,17 @@ class _EdiScreenState extends State<EditScreen> {
           'Edit To Do',
           style: TextStyle(color: Color(0xFF4EA949)),
         ),
-        leading: Container(
-          width: 32.0,
-          height: 32.0,
-          margin: EdgeInsets.all(5.0),
-          child: Image(
-            image: AssetImage('assets/images/back.png'),
+        leading: GestureDetector(
+          onTap: () {
+            Navigator.pop(context);
+          },
+          child: Container(
+            width: 32.0,
+            height: 32.0,
+            margin: EdgeInsets.all(5.0),
+            child: Image(
+              image: AssetImage('assets/images/back.png'),
+            ),
           ),
         ),
       ),
@@ -67,6 +106,7 @@ class _EdiScreenState extends State<EditScreen> {
             Text('Name'),
             SizedBox(height: 8),
             TextField(
+              controller: _nameController,
               decoration: InputDecoration(
                 border: OutlineInputBorder(),
               ),
@@ -106,6 +146,7 @@ class _EdiScreenState extends State<EditScreen> {
             SizedBox(height: 8),
             Text('Label'),
             TextField(
+              controller: _labelController,
               decoration: InputDecoration(
                 border: OutlineInputBorder(),
               ),
@@ -114,6 +155,7 @@ class _EdiScreenState extends State<EditScreen> {
             Text('Description'),
             SizedBox(height: 8),
             TextField(
+              controller: _descriptionController,
               maxLines: 3,
               decoration: InputDecoration(
                 border: OutlineInputBorder(),
@@ -183,21 +225,33 @@ class _EdiScreenState extends State<EditScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text('Status'),
-                DropdownButtonFormField<String>(
-                  decoration: InputDecoration(
-                    border: OutlineInputBorder(),
-                  ),
-                  value: _status,
-                  items: [
-                    DropdownMenuItem(value: 'New', child: Text('New')),
-                    DropdownMenuItem(
-                        value: 'In Process', child: Text('In Process')),
-                    DropdownMenuItem(value: 'Done', child: Text('Done')),
-                  ],
-                  onChanged: (value) {
-                    setState(() {
-                      _status = value!;
-                    });
+                FutureBuilder<List<String>>(
+                  future: getStatusValuesFromDatabase(),
+                  builder: (context, snapshot) {
+                    if (snapshot.connectionState == ConnectionState.waiting) {
+                      return CircularProgressIndicator();
+                    } else if (snapshot.hasError) {
+                      return Text('Error: ${snapshot.error}');
+                    } else {
+                      return DropdownButtonFormField<String>(
+                        decoration: InputDecoration(
+                          border: OutlineInputBorder(),
+                        ),
+                        value: _status,
+                        items: snapshot.data?.map((status) {
+                              return DropdownMenuItem(
+                                value: status,
+                                child: Text(status),
+                              );
+                            }).toList() ??
+                            [],
+                        onChanged: (value) {
+                          setState(() {
+                            _status = value!;
+                          });
+                        },
+                      );
+                    }
                   },
                 ),
               ],
@@ -205,12 +259,7 @@ class _EdiScreenState extends State<EditScreen> {
             SizedBox(height: 16),
             ElevatedButton(
               onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => TodoScreen(tab: 0,),
-                  ),
-                );
+                saveChanges();
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: Color(0xFF4EA949),
@@ -226,5 +275,35 @@ class _EdiScreenState extends State<EditScreen> {
         ),
       ),
     );
+  }
+
+  void saveChanges() async {
+    try {
+      Task updatedTask = Task(
+        task_id: widget.task.task_id,
+        task_name: _nameController.text,
+        start_date: _startDate,
+        due_date: _endDate,
+        task_description: _descriptionController.text,
+        task_status: _status,
+        user_id: widget.task.user_id,
+        label_id: widget.task.label_id,
+        is_visible: _isAssigned,
+      );
+
+      await FirebaseFirestore.instance
+          .collection('tasks')
+          .doc(widget.task.task_id)
+          .update(updatedTask.toFirestore());
+
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => TodoScreen(tab: 0),
+        ),
+      );
+    } catch (e) {
+      print('Error updating task: $e');
+    }
   }
 }
