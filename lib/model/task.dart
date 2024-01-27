@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class Task {
+  final String task_id;
   final String task_name;
   final String task_description;
   final String task_status;
@@ -10,7 +11,8 @@ class Task {
   final DateTime start_date;
   final DateTime due_date;
   Task(
-      {required this.task_name,
+      {
+        required this.task_id,required this.task_name,
       required this.task_description,
       required this.task_status,
       required this.user_id,
@@ -20,6 +22,7 @@ class Task {
       required this.due_date});
   factory Task.fromJson(Map<String, dynamic>? json) {
     return Task(
+      task_id: json?['task_id'] as String,
       task_name: json?["task_name"] as String,
       task_description: json?["task_description"] as String,
       task_status: json?["task_status"] as String,
@@ -49,6 +52,7 @@ class Task {
   ) {
     final data = snapshot.data();
     return Task(
+      task_id: data?["task_id"],
       task_name: data?["task_name"],
       task_description: data?["task_description"],
       task_status: data?["task_status"],

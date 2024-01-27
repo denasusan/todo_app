@@ -53,7 +53,9 @@ class _AddScreenState extends State<AddScreen> {
     DocumentReference user_id =
         db.collection('users').doc('rkHhSJzDvgmKJ6whbCax');
     DocumentReference label_id = db.collection('labels').doc(labelChoosed);
+    String task_id = DateTime.now().millisecondsSinceEpoch.toString();
     final taskData = Task(
+        task_id: task_id,
         task_name: _name,
         task_description: _description,
         task_status: "new",
@@ -65,19 +67,16 @@ class _AddScreenState extends State<AddScreen> {
     final docRef = db.collection('tasks').withConverter(
         fromFirestore: Task.fromFirestore,
         toFirestore: (Task task, options) => task.toFirestore());
-    await docRef
-        .doc(DateTime.now().millisecondsSinceEpoch.toString())
-        .set(taskData)
-        .then((value) => {
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => TodoScreen(
-                    tab: 0,
-                  ),
-                ),
-              )
-            });
+    await docRef.doc(task_id).set(taskData).then((value) => {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(
+              builder: (context) => TodoScreen(
+                tab: 0,
+              ),
+            ),
+          )
+        });
   }
 
   void getLabelByUser() async {
