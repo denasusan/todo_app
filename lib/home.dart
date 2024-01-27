@@ -1,5 +1,7 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:todo_app/main.dart';
+import 'package:todo_app/model/task.dart';
 import 'package:todo_app/screens/login_screen.dart';
 import 'package:todo_app/screens/manage_label_screen.dart';
 import 'package:todo_app/screens/todo_screen.dart';
@@ -15,6 +17,7 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   final _formKey = GlobalKey<FormState>();
+  String allTask = "", waitingTask = "";
   var _usernameController = TextEditingController();
   var _emailController = TextEditingController();
 
@@ -126,10 +129,26 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
+  void getCountTasksByUser() async {
+    final FirebaseFirestore db = FirebaseFirestore.instance;
+    final allTaskCount = db.collection('tasks').count();
+    final waitingTaskCount = db
+        .collection('tasks')
+        .where("task_status", isEqualTo: "done")
+        .count();
+
+    final AggregateQuerySnapshot snapshotAll = await allTaskCount.get();
+    final AggregateQuerySnapshot snapshotWaiting = await waitingTaskCount.get();
+
+    allTask = snapshotAll.count.toString();
+    waitingTask = snapshotWaiting.count.toString();
+    setState(() {});
+  }
+
   @override
   void initState() {
     super.initState();
-
+    getCountTasksByUser();
     _getUserData();
   }
 
@@ -235,15 +254,15 @@ class _HomeScreenState extends State<HomeScreen> {
                       mainAxisAlignment: MainAxisAlignment.spaceAround,
                       children: [
                         Text(
-                          "Today, \n12 November 2023",
+                          "Today, \n${DateTime.now().day}, ${month[DateTime.now().month-1]} ${DateTime.now().year}",
                           style: TextStyle(
                               color: BLACK_CUSTOM,
                               fontSize: 13.0,
                               fontWeight: FontWeight.w600),
                         ),
                         Flexible(
-                          child: Text(
-                            "2/10 tasks",
+                          child: allTask == "" ? Center(child: CircularProgressIndicator()) : Text(
+                            "${waitingTask}/${allTask} tasks",
                             style: TextStyle(
                                 color: BLACK_CUSTOM,
                                 fontSize: 20.0,
@@ -432,7 +451,9 @@ class _HomeScreenState extends State<HomeScreen> {
                         Navigator.push(
                             context,
                             MaterialPageRoute(
-                                builder: (context) => TodoScreen(tab: 2,)))
+                                builder: (context) => TodoScreen(
+                                      tab: 2,
+                                    )))
                       },
                       child: Container(
                         width: MediaQuery.of(context).size.width / 3,

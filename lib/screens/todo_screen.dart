@@ -19,7 +19,7 @@ class TodoScreen extends StatefulWidget {
 
 class _TodoScreenState extends State<TodoScreen> {
   int _selectedTab = 0;
-  List<Task> taskList = [];
+  List<Task> taskListDoneScreen = [];
   List _pages = [
     Center(
       child: Text("Home"),
@@ -65,7 +65,7 @@ class _TodoScreenState extends State<TodoScreen> {
               is_visible: docSnapshot?.data()['is_visible'] as bool,
               start_date: docSnapshot?.data()['start_date'].toDate(),
               due_date: docSnapshot?.data()['due_date'].toDate());
-          taskList.add(task);
+          taskListDoneScreen.add(task);
         }
         setState(() {});
       },
@@ -156,11 +156,11 @@ class _TodoScreenState extends State<TodoScreen> {
       ),
       body: _selectedTab == 1
           ? InProcessScreen()
-          : _selectedTab == 1
+          : _selectedTab == 2
               ? DoneScreen()
               : SingleChildScrollView(
                   child: Column(
-                    children: taskList.map((e) {
+                    children: taskListDoneScreen.map((e) {
                       DocumentReference labels = e.label_id;
                       final label_id = labels.path.split("/")[1];
 
@@ -248,7 +248,7 @@ class _TodoScreenState extends State<TodoScreen> {
                                       width: 5.0,
                                     ),
                                     Text(
-                                      e.due_date.toString(),
+                                      "${e.due_date.day}, ${month[e.due_date.month - 1]} ${e.due_date.year}",
                                       style: TextStyle(
                                           fontSize: 10.0,
                                           fontWeight: FontWeight.w500,

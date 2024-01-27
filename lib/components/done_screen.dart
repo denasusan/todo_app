@@ -170,7 +170,7 @@ class _DoneScreenState extends State<DoneScreen> {
                           width: 5.0,
                         ),
                         Text(
-                          e.due_date.toString(),
+                          "${e.due_date.day}, ${month[e.due_date.month - 1]} ${e.due_date.year}",
                           style: TextStyle(
                               fontSize: 10.0,
                               fontWeight: FontWeight.w500,
