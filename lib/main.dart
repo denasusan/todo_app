@@ -108,8 +108,8 @@ void main() async {
   // updateUser();
   // deleteUser();
   // addUserByModel();
-  updateUserByModel();
-  readUserByModel();
+  // updateUserByModel();
+  // readUserByModel();
   // users.get().then(
   //   (querySnapshot) {
   //     print("Successfully completed");

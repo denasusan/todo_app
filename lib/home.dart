@@ -52,7 +52,8 @@ class _HomeScreenState extends State<HomeScreen> {
                         child: const Text('Save'),
                         onPressed: () {
                           if (_formKey.currentState!.validate()) {
-                            _formKey.currentState!.save();
+                            _changeUsername(_email, _usernameController.text);
+                            Navigator.pop(context);
                           }
                         },
                       ),
@@ -87,20 +88,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                     Padding(
                       padding: const EdgeInsets.symmetric(vertical: 10),
-                      child: TextFormField(
-                        keyboardType: TextInputType.name,
-                        controller: _emailController,
-                        decoration: const InputDecoration(
-                          border: OutlineInputBorder(),
-                          hintText: "Enter your email",
-                        ),
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return 'Email cannot be empty';
-                          }
-                          return null;
-                        },
-                      ),
+                      child: Text(_email),
                     ),
                   ],
                 ),
@@ -110,6 +98,19 @@ class _HomeScreenState extends State<HomeScreen> {
         );
       },
     );
+  }
+
+  void _changeUsername(String email, String newUsername) async {
+    final FirebaseFirestore db = FirebaseFirestore.instance;
+    final docref = db.collection('users');
+    await docref.doc(email).update({'user_name': newUsername});
+
+    SharedPreferencesService pref =
+        await SharedPreferencesService.getInstance();
+    pref.saveData('user_name', newUsername);
+    setState(() {
+      _username = newUsername;
+    });
   }
 
   void _getUserData() async {
