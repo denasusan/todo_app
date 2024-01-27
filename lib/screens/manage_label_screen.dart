@@ -1,7 +1,10 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:todo_app/home.dart';
 import 'package:todo_app/main.dart';
+import 'package:todo_app/services/shared_preference_service.dart';
 // import 'package:todo_app/widgets/label_card.dart';
 
 class ManageLabelScreen extends StatefulWidget {
@@ -15,9 +18,11 @@ class _ManageLabelScreenState extends State<ManageLabelScreen> {
   bool _showFab = true;
   final _formKey = GlobalKey<FormState>();
   final _labelNameController = TextEditingController();
-  int _selectedColor = 0;
+  int _selectedColor = -1;
+  List<String> _colors = ["e74c3c", "f1c40f", "2ecc71", "3498db"];
+  late String _userEmail = "";
 
-  void showLabelDialog() {
+  void _showLabelDialog(docId) {
     showDialog<void>(
       context: context,
       builder: (context) {
@@ -44,7 +49,12 @@ class _ManageLabelScreenState extends State<ManageLabelScreen> {
                         child: const Text('Save'),
                         onPressed: () {
                           if (_formKey.currentState!.validate()) {
-                            _formKey.currentState!.save();
+                            _addOrEditLabel(docId, _labelNameController.text,
+                                _colors[_selectedColor]);
+
+                            _labelNameController.text = "";
+                            _selectedColor = -1;
+                            Navigator.pop(context);
                           }
                         },
                       ),
@@ -83,13 +93,30 @@ class _ManageLabelScreenState extends State<ManageLabelScreen> {
                         mainAxisAlignment: MainAxisAlignment.spaceAround,
                         children: [
                           GestureDetector(
+                            onTap: () => setState(() => _selectedColor = 0),
+                            child: Container(
+                              height: 50,
+                              width: 50,
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                color: const Color(0xffe74c3c),
+                                border: Border.all(
+                                  color: _selectedColor == 0
+                                      ? Colors.black54
+                                      : Colors.transparent,
+                                  width: 3.0,
+                                ),
+                              ),
+                            ),
+                          ),
+                          GestureDetector(
                             onTap: () => setState(() => _selectedColor = 1),
                             child: Container(
                               height: 50,
                               width: 50,
                               decoration: BoxDecoration(
                                 shape: BoxShape.circle,
-                                color: Colors.red,
+                                color: const Color(0xfff1c40f),
                                 border: Border.all(
                                   color: _selectedColor == 1
                                       ? Colors.black54
@@ -106,7 +133,7 @@ class _ManageLabelScreenState extends State<ManageLabelScreen> {
                               width: 50,
                               decoration: BoxDecoration(
                                 shape: BoxShape.circle,
-                                color: Colors.yellow,
+                                color: const Color(0xff2ecc71),
                                 border: Border.all(
                                   color: _selectedColor == 2
                                       ? Colors.black54
@@ -123,26 +150,9 @@ class _ManageLabelScreenState extends State<ManageLabelScreen> {
                               width: 50,
                               decoration: BoxDecoration(
                                 shape: BoxShape.circle,
-                                color: Colors.green,
+                                color: const Color(0xff3498db),
                                 border: Border.all(
                                   color: _selectedColor == 3
-                                      ? Colors.black54
-                                      : Colors.transparent,
-                                  width: 3.0,
-                                ),
-                              ),
-                            ),
-                          ),
-                          GestureDetector(
-                            onTap: () => setState(() => _selectedColor = 4),
-                            child: Container(
-                              height: 50,
-                              width: 50,
-                              decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                color: Colors.blue,
-                                border: Border.all(
-                                  color: _selectedColor == 4
                                       ? Colors.black54
                                       : Colors.transparent,
                                   width: 3.0,
@@ -161,6 +171,57 @@ class _ManageLabelScreenState extends State<ManageLabelScreen> {
         );
       },
     );
+  }
+
+  void _getUserEmail() async {
+    SharedPreferencesService pref =
+        await SharedPreferencesService.getInstance();
+
+    setState(() {
+      _userEmail = pref.getData('email');
+    });
+  }
+
+  void _addOrEditLabel(
+      String docId, String labelName, String labelColor) async {
+    FirebaseFirestore db = FirebaseFirestore.instance;
+    SharedPreferencesService pref =
+        await SharedPreferencesService.getInstance();
+    var userEmail = pref.getData('email');
+
+    final docref = db.collection('labels');
+
+    if (docId.isEmpty) {
+      await docref.doc().set({
+        "label_name": labelName,
+        "label_color": labelColor,
+        "user_id": userEmail
+      });
+    } else {
+      await docref.doc(docId).update({
+        "label_name": labelName,
+        "label_color": labelColor,
+      });
+    }
+  }
+
+  void _deleteLabel(String docId) async {
+    FirebaseFirestore db = FirebaseFirestore.instance;
+
+    final docref = db.collection('labels');
+    await docref.doc(docId).delete();
+  }
+
+  @override
+  void initState() {
+    super.initState();
+
+    _getUserEmail();
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
   }
 
   @override
@@ -183,7 +244,7 @@ class _ManageLabelScreenState extends State<ManageLabelScreen> {
           ),
         ),
         title: Text(
-          'To-Do List',
+          'Labels',
           style: TextStyle(
               fontSize: 20.0,
               fontWeight: FontWeight.w600,
@@ -202,81 +263,115 @@ class _ManageLabelScreenState extends State<ManageLabelScreen> {
           )
         ],
       ),
-      body: SingleChildScrollView(
-        child: Column(
-          children: <int>[1, 2, 3, 4, 5, 6, 7, 8, 9]
-              .map(
-                (e) => Container(
-                  padding: EdgeInsets.only(
-                    left: 5.0,
-                  ),
-                  margin: EdgeInsets.only(
-                      left: 10, right: 10, top: 5.0, bottom: 5.0),
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(15),
-                    color: Color(0xFFF8F9FA),
-                    boxShadow: [
-                      BoxShadow(
-                        color: const Color.fromARGB(255, 213, 213, 213),
-                        blurRadius: 5.0, // soften the shadow
-                        offset: Offset(
-                          0.0, // Move to right 10  horizontally
-                          6.0, // Move to bottom 10 Vertically
-                        ),
+      body: StreamBuilder(
+        stream: FirebaseFirestore.instance
+            .collection('labels')
+            .where('user_id', isEqualTo: _userEmail)
+            .snapshots(),
+        builder: (context, snapshot) {
+          if (snapshot.hasError) {
+            return const Text('Error saat ambil data');
+          }
+
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(
+              child: CircularProgressIndicator(),
+            );
+          }
+
+          return ListView(
+            children: snapshot.data!.docs
+                .map(
+                  (DocumentSnapshot document) {
+                    Map<String, dynamic> data =
+                        document.data()! as Map<String, dynamic>;
+                    return Container(
+                      padding: EdgeInsets.only(
+                        left: 5.0,
                       ),
-                    ],
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      margin: EdgeInsets.only(
+                          left: 10, right: 10, top: 5.0, bottom: 5.0),
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(15),
+                        color: Color(0xFFF8F9FA),
+                        boxShadow: [
+                          BoxShadow(
+                            color: const Color.fromARGB(255, 213, 213, 213),
+                            blurRadius: 5.0, // soften the shadow
+                            offset: Offset(
+                              0.0, // Move to right 10  horizontally
+                              6.0, // Move to bottom 10 Vertically
+                            ),
+                          ),
+                        ],
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              Text(
-                                'Perkuliahan',
-                                style: TextStyle(
-                                    fontSize: 10.0,
-                                    fontWeight: FontWeight.w500,
-                                    color: Colors.black),
+                              Row(
+                                children: [
+                                  Text(
+                                    data['label_name'],
+                                    style: TextStyle(
+                                        fontSize: 10.0,
+                                        fontWeight: FontWeight.w500,
+                                        color: Colors.black),
+                                  )
+                                ],
+                              ),
+                              DropdownButtonHideUnderline(
+                                child: DropdownButton<String>(
+                                  dropdownColor: Colors.white,
+                                  style: TextStyle(color: Color(0xFF001A72)),
+                                  icon: Image(
+                                    image: AssetImage(
+                                        'assets/images/menu_icon.png'),
+                                    width: 24.0,
+                                    height: 24.0,
+                                  ),
+                                  items: <String>['Edit', 'Delete'].map(
+                                    (String value) {
+                                      return DropdownMenuItem<String>(
+                                        value: value,
+                                        child: Text(value),
+                                      );
+                                    },
+                                  ).toList(),
+                                  onChanged: (String? value) {
+                                    if (value == 'Edit') {
+                                      _showLabelDialog(document.id);
+                                      _labelNameController.text =
+                                          data['label_name'];
+                                      _selectedColor =
+                                          _colors.indexOf(data['label_color']);
+                                    }
+
+                                    if (value == 'Delete') {
+                                      _deleteLabel(document.id);
+                                    }
+                                  },
+                                ),
                               )
                             ],
-                          ),
-                          DropdownButtonHideUnderline(
-                            child: DropdownButton<String>(
-                              dropdownColor: Colors.white,
-                              style: TextStyle(color: Color(0xFF001A72)),
-                              icon: Image(
-                                image:
-                                    AssetImage('assets/images/menu_icon.png'),
-                                width: 24.0,
-                                height: 24.0,
-                              ),
-                              items: <String>['Edit', 'Delete']
-                                  .map((String value) {
-                                return DropdownMenuItem<String>(
-                                  value: value,
-                                  child: Text(value),
-                                );
-                              }).toList(),
-                              onChanged: (String? value) {},
-                            ),
                           )
                         ],
-                      )
-                    ],
-                  ),
-                ),
-              )
-              .toList(),
-        ),
+                      ),
+                    );
+                  },
+                )
+                .toList()
+                .cast(),
+          );
+        },
       ),
       floatingActionButton: AnimatedSlide(
         duration: const Duration(milliseconds: 300),
         offset: _showFab ? Offset.zero : const Offset(0, 2),
         child: FloatingActionButton(
-          onPressed: showLabelDialog,
+          onPressed: () => _showLabelDialog(""),
           foregroundColor: Colors.white,
           backgroundColor: Colors.green.shade400,
           child: Image(
