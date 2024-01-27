@@ -132,10 +132,8 @@ class _HomeScreenState extends State<HomeScreen> {
   void getCountTasksByUser() async {
     final FirebaseFirestore db = FirebaseFirestore.instance;
     final allTaskCount = db.collection('tasks').count();
-    final waitingTaskCount = db
-        .collection('tasks')
-        .where("task_status", isEqualTo: "done")
-        .count();
+    final waitingTaskCount =
+        db.collection('tasks').where("task_status", isEqualTo: "done").count();
 
     final AggregateQuerySnapshot snapshotAll = await allTaskCount.get();
     final AggregateQuerySnapshot snapshotWaiting = await waitingTaskCount.get();
@@ -206,7 +204,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           width: 5.0,
                         ),
                         Text(
-                          _username.isEmpty ? _email : "Kamu",
+                          _username.isEmpty ? _email : _username,
                           style: TextStyle(
                               color: GREEN_PRIMARY,
                               fontSize: 20.0,
@@ -254,20 +252,22 @@ class _HomeScreenState extends State<HomeScreen> {
                       mainAxisAlignment: MainAxisAlignment.spaceAround,
                       children: [
                         Text(
-                          "Today, \n${DateTime.now().day}, ${month[DateTime.now().month-1]} ${DateTime.now().year}",
+                          "Today, \n${DateTime.now().day}, ${month[DateTime.now().month - 1]} ${DateTime.now().year}",
                           style: TextStyle(
                               color: BLACK_CUSTOM,
                               fontSize: 13.0,
                               fontWeight: FontWeight.w600),
                         ),
                         Flexible(
-                          child: allTask == "" ? Center(child: CircularProgressIndicator()) : Text(
-                            "${waitingTask}/${allTask} tasks",
-                            style: TextStyle(
-                                color: BLACK_CUSTOM,
-                                fontSize: 20.0,
-                                fontWeight: FontWeight.w600),
-                          ),
+                          child: allTask == ""
+                              ? Center(child: CircularProgressIndicator())
+                              : Text(
+                                  "${waitingTask}/${allTask} tasks",
+                                  style: TextStyle(
+                                      color: BLACK_CUSTOM,
+                                      fontSize: 20.0,
+                                      fontWeight: FontWeight.w600),
+                                ),
                         ),
                       ],
                     ),
