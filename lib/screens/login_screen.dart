@@ -1,5 +1,7 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:todo_app/home.dart';
+import 'package:todo_app/model/user.dart';
 import 'package:todo_app/services/shared_preference_service.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -26,6 +28,30 @@ class _LoginScreenState extends State<LoginScreen> {
     }
   }
 
+  Future<String?> _checkCredentials(String documentKey) async {
+    final FirebaseFirestore db = FirebaseFirestore.instance;
+
+    final docRef = db.collection('users').doc(documentKey);
+    final querySnapshot = await docRef.get();
+
+    if (querySnapshot.exists) {
+      return querySnapshot.data()?['user_name'];
+    } else {
+      return null;
+    }
+  }
+
+  void _addCredentials(String email) async {
+    final FirebaseFirestore db = FirebaseFirestore.instance;
+
+    final userData = User(user_email: email, user_name: "");
+    final docRef = db.collection('users').withConverter(
+        fromFirestore: User.fromFirestore,
+        toFirestore: (User user, options) => user.toFirestore());
+
+    await docRef.doc(email).set(userData);
+  }
+
   Future<void> _authenticate() async {
     if (!_isLoading) {
       setState(() => _isLoading = true);
@@ -39,12 +65,31 @@ class _LoginScreenState extends State<LoginScreen> {
       pref.saveData('email', email);
       pref.saveData('is_login', true);
 
-      Future.delayed(const Duration(seconds: 2), () {
-        setState(() => _isLoading = false);
+      try {
+        String? userName = await _checkCredentials(email);
 
-        Navigator.push(context,
-            MaterialPageRoute(builder: (context) => const HomeScreen()));
-      });
+        if (userName == null) {
+          _addCredentials(email);
+        } else {
+          pref.saveData('username', userName);
+        }
+
+        Future.delayed(
+          const Duration(seconds: 2),
+          () {
+            setState(() => _isLoading = false);
+
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const HomeScreen(),
+              ),
+            );
+          },
+        );
+      } catch (e) {
+        print(e);
+      }
     }
   }
 
