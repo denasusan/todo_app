@@ -19,9 +19,11 @@ class _EditScreenState extends State<EditScreen> {
   late String _status;
   late bool _isAssigned;
   late String _assignedTo;
+
   TextEditingController _nameController = TextEditingController();
   TextEditingController _labelController = TextEditingController();
   TextEditingController _descriptionController = TextEditingController();
+  TextEditingController _assignToController = TextEditingController();
 
   @override
   void initState() {
@@ -30,10 +32,13 @@ class _EditScreenState extends State<EditScreen> {
     _endDate = widget.task.due_date;
     _status = widget.task.task_status;
     _isAssigned = widget.task.is_visible;
+    _assignedTo =
+        widget.task.sharedWith.isNotEmpty ? widget.task.sharedWith[0] : '';
 
     _nameController.text = widget.task.task_name;
     _labelController.text = widget.task.label_id.id;
     _descriptionController.text = widget.task.task_description;
+    _assignToController.text = _assignedTo;
   }
 
   Future<List<String>> getStatusValuesFromDatabase() async {
@@ -201,13 +206,22 @@ class _EditScreenState extends State<EditScreen> {
                   border: OutlineInputBorder(),
                   hintText: 'Search user',
                 ),
+                controller: _assignToController,
               ),
               suggestionsCallback: (pattern) async {
-                return [
-                  'User 1',
-                  'User 2',
-                  'User 3',
-                ];
+                final FirebaseFirestore db = FirebaseFirestore.instance;
+                final QuerySnapshot<Map<String, dynamic>> usersSnapshot =
+                    await db.collection('users').get();
+
+                List<String> userSuggestions = usersSnapshot.docs
+                    .map<String?>((doc) => doc['user_email'] as String?)
+                    .where((userEmail) =>
+                        userEmail != null &&
+                        userEmail.toLowerCase().contains(pattern.toLowerCase()))
+                    .cast<String>()
+                    .toList();
+
+                return userSuggestions;
               },
               itemBuilder: (context, suggestion) {
                 return ListTile(
@@ -215,8 +229,10 @@ class _EditScreenState extends State<EditScreen> {
                 );
               },
               onSuggestionSelected: (suggestion) {
+                print('Selected suggestion: $suggestion');
                 setState(() {
                   _assignedTo = suggestion!;
+                  _assignToController.text = suggestion;
                 });
               },
             ),
@@ -289,6 +305,9 @@ class _EditScreenState extends State<EditScreen> {
         user_id: widget.task.user_id,
         label_id: widget.task.label_id,
         is_visible: _isAssigned,
+        sharedWith: _assignToController.text.isNotEmpty
+            ? [_assignToController.text]
+            : [],
       );
 
       await FirebaseFirestore.instance
