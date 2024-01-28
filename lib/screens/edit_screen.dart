@@ -18,12 +18,13 @@ class _EditScreenState extends State<EditScreen> {
   late DateTime _endDate;
   late String _status;
   late bool _isAssigned;
-  late String _assignedTo;
+  final TextEditingController _assignToController = TextEditingController();
+  String _assignedTo = '';
+  List<String> _suggestions = [];
 
   TextEditingController _nameController = TextEditingController();
   TextEditingController _labelController = TextEditingController();
   TextEditingController _descriptionController = TextEditingController();
-  TextEditingController _assignToController = TextEditingController();
 
   @override
   void initState() {
@@ -32,13 +33,35 @@ class _EditScreenState extends State<EditScreen> {
     _endDate = widget.task.due_date;
     _status = widget.task.task_status;
     _isAssigned = widget.task.is_visible;
-    _assignedTo =
-        widget.task.sharedWith.isNotEmpty ? widget.task.sharedWith[0] : '';
+    _assignedTo = widget.task.sharedWith.isNotEmpty
+        ? widget.task.sharedWith.join(', ')
+        : '';
 
     _nameController.text = widget.task.task_name;
     _labelController.text = widget.task.label_id.id;
     _descriptionController.text = widget.task.task_description;
     _assignToController.text = _assignedTo;
+  }
+
+  void updateSuggestions(String text) {
+    final FirebaseFirestore db = FirebaseFirestore.instance;
+
+    db
+        .collection('users')
+        .get()
+        .then((QuerySnapshot<Map<String, dynamic>> snapshot) {
+      List<String> userSuggestions = snapshot.docs
+          .map<String?>((doc) => doc['user_email'] as String?)
+          .where((userEmail) =>
+              userEmail != null &&
+              userEmail.toLowerCase().contains(text.toLowerCase()))
+          .cast<String>()
+          .toList();
+
+      setState(() {
+        _suggestions = userSuggestions;
+      });
+    });
   }
 
   Future<List<String>> getStatusValuesFromDatabase() async {
@@ -200,41 +223,29 @@ class _EditScreenState extends State<EditScreen> {
             ),
             SizedBox(height: 4),
             Text('Assign To'),
-            TypeAheadField<String>(
-              textFieldConfiguration: TextFieldConfiguration(
-                decoration: InputDecoration(
-                  border: OutlineInputBorder(),
-                  hintText: 'Search user',
-                ),
-                controller: _assignToController,
+            TextField(
+              controller: _assignToController,
+              decoration: InputDecoration(
+                border: OutlineInputBorder(),
+                hintText: 'Search user',
               ),
-              suggestionsCallback: (pattern) async {
-                final FirebaseFirestore db = FirebaseFirestore.instance;
-                final QuerySnapshot<Map<String, dynamic>> usersSnapshot =
-                    await db.collection('users').get();
-
-                List<String> userSuggestions = usersSnapshot.docs
-                    .map<String?>((doc) => doc['user_email'] as String?)
-                    .where((userEmail) =>
-                        userEmail != null &&
-                        userEmail.toLowerCase().contains(pattern.toLowerCase()))
-                    .cast<String>()
-                    .toList();
-
-                return userSuggestions;
+              onChanged: (text) {
+                updateSuggestions(text);
               },
-              itemBuilder: (context, suggestion) {
-                return ListTile(
-                  title: Text(suggestion),
-                );
-              },
-              onSuggestionSelected: (suggestion) {
-                print('Selected suggestion: $suggestion');
-                setState(() {
-                  _assignedTo = suggestion!;
-                  _assignToController.text = suggestion;
-                });
-              },
+            ),
+            Column(
+              children: _suggestions
+                  .map((suggestion) => ListTile(
+                        title: Text(suggestion),
+                        onTap: () {
+                          setState(() {
+                            _assignedTo = suggestion;
+                            _assignToController.text = suggestion;
+                            _suggestions = [];
+                          });
+                        },
+                      ))
+                  .toList(),
             ),
             SizedBox(height: 8),
             Column(
