@@ -28,6 +28,7 @@ class _EditScreenState extends State<EditScreen> {
   List<dynamic> _assignToList = [];
   String _labelChoosedController = "";
   List<Label> labelList = [];
+  bool isTextFieldEnabled = false;
 
   TextEditingController _nameController = TextEditingController();
   TextEditingController _labelController = TextEditingController();
@@ -49,6 +50,7 @@ class _EditScreenState extends State<EditScreen> {
     _descriptionController.text = widget.task.task_description;
     _assignToController.text = _assignedTo;
     getLabelByUser();
+    enableFieldBasedOnUser();
   }
 
   void getLabelByUser() async {
@@ -102,6 +104,33 @@ class _EditScreenState extends State<EditScreen> {
         _suggestions = userSuggestions;
       });
     });
+  }
+
+  Future<void> enableFieldBasedOnUser() async {
+    final FirebaseFirestore db = FirebaseFirestore.instance;
+    final SharedPreferencesService pref =
+        await SharedPreferencesService.getInstance();
+    String email = "";
+
+    if (pref.getData('is_login')) {
+      email = pref.getData('email');
+      DocumentReference userRef = db.collection('users').doc(email);
+
+      final taskDocs = await db
+          .collection('tasks')
+          .where('user_id', isEqualTo: userRef)
+          .get();
+
+      if (taskDocs.docs.isNotEmpty) {
+        setState(() {
+          isTextFieldEnabled = true;
+        });
+      } else {
+        setState(() {
+          isTextFieldEnabled = false;
+        });
+      }
+    } else {}
   }
 
   Future<List<String>> getStatusValuesFromDatabase() async {
@@ -178,6 +207,7 @@ class _EditScreenState extends State<EditScreen> {
               decoration: InputDecoration(
                 border: OutlineInputBorder(),
               ),
+              enabled: isTextFieldEnabled,
             ),
             SizedBox(height: 8),
             Row(
@@ -268,6 +298,7 @@ class _EditScreenState extends State<EditScreen> {
               decoration: InputDecoration(
                 border: OutlineInputBorder(),
               ),
+              enabled: isTextFieldEnabled,
             ),
             SizedBox(height: 8),
             Column(
@@ -312,6 +343,7 @@ class _EditScreenState extends State<EditScreen> {
               onChanged: (text) {
                 updateSuggestions(text);
               },
+              enabled: isTextFieldEnabled,
             ),
             _assignToList.length > 0
                 ? Text('Assigned To')
