@@ -7,7 +7,9 @@ import 'package:todo_app/main.dart';
 import 'package:todo_app/model/label.dart';
 import 'package:todo_app/model/task.dart';
 import 'package:todo_app/screens/edit_screen.dart';
+import 'package:todo_app/screens/login_screen.dart';
 import 'package:todo_app/screens/todo_screen.dart';
+import 'package:todo_app/services/shared_preference_service.dart';
 
 class InProcessScreen extends StatefulWidget {
   InProcessScreen({Key? key}) : super(key: key);
@@ -19,36 +21,48 @@ class InProcessScreen extends StatefulWidget {
 class _InProcessScreenState extends State<InProcessScreen> {
   List<Task> taskList = [];
 
+  @override
   initState() {
+    super.initState();
     getTasksByUser();
   }
 
   void getTasksByUser() async {
     final FirebaseFirestore db = FirebaseFirestore.instance;
+    final SharedPreferencesService pref =
+        await SharedPreferencesService.getInstance();
+    String email = "";
 
-    // final userData = User(user_email: "fikri@gmail.com", user_name: "Fikri New");
-    final docRef =
-        db.collection('tasks').where("task_status", isEqualTo: "in progress");
-    docRef.get().then(
-      (querySnapshot) {
-        for (var docSnapshot in querySnapshot.docs) {
-          Task task = new Task(
-              task_id: docSnapshot?.id as String,
-              task_name: docSnapshot?.data()['task_name'] as String,
-              task_description:
-                  docSnapshot?.data()['task_description'] as String,
-              task_status: docSnapshot?.data()['task_status'] as String,
-              user_id: docSnapshot?.data()['user_id'] as DocumentReference,
-              label_id: docSnapshot?.data()['label_id'] as DocumentReference,
-              is_visible: docSnapshot?.data()['is_visible'] as bool,
-              start_date: docSnapshot?.data()['start_date'].toDate(),
-              due_date: docSnapshot?.data()['due_date'].toDate());
-          taskList.add(task);
-        }
-        setState(() {});
-      },
-      onError: (e) => print("Error completing: $e"),
-    );
+    if (pref.getData('is_login')) {
+      email = pref.getData('email');
+      final docRef = db
+          .collection('tasks')
+          .where("task_status", isEqualTo: "in progress")
+          .where("sharedWith", arrayContains: email);
+      docRef.get().then(
+        (querySnapshot) {
+          for (var docSnapshot in querySnapshot.docs) {
+            Task task = new Task(
+                task_id: docSnapshot?.id as String,
+                task_name: docSnapshot?.data()['task_name'] as String,
+                task_description:
+                    docSnapshot?.data()['task_description'] as String,
+                task_status: docSnapshot?.data()['task_status'] as String,
+                user_id: docSnapshot?.data()['user_id'] as DocumentReference,
+                label_id: docSnapshot?.data()['label_id'] as DocumentReference,
+                is_visible: docSnapshot?.data()['is_visible'] as bool,
+                start_date: docSnapshot?.data()['start_date'].toDate(),
+                due_date: docSnapshot?.data()['due_date'].toDate());
+            taskList.add(task);
+          }
+          setState(() {});
+        },
+        onError: (e) => print("Error completing: $e"),
+      );
+    } else {
+      Navigator.push(context,
+          MaterialPageRoute(builder: (context) => const LoginScreen()));
+    }
   }
 
   Future<Label> getLabelByReference(String docInput) async {
@@ -122,7 +136,23 @@ class _InProcessScreenState extends State<InProcessScreen> {
                                         color: Colors.white),
                                   ),
                                 ),
-                                color: Color(0xFF58C952),
+                                color:
+                                    snapshot.data!.label_color.toLowerCase() ==
+                                            "3498db"
+                                        ? Color(0xFF3498db)
+                                        : snapshot.data!.label_color
+                                                    .toLowerCase() ==
+                                                "2ecc71"
+                                            ? Color(0xFF2ecc71)
+                                            : snapshot.data!.label_color
+                                                        .toLowerCase() ==
+                                                    "f1c40f"
+                                                ? Color(0xFFf1c40f)
+                                                : snapshot.data!.label_color
+                                                            .toLowerCase() ==
+                                                        "e74c3c"
+                                                    ? Color(0xFFe74c3c)
+                                                    : Colors.blue,
                                 elevation: 2.0,
                               ),
                             );
@@ -139,6 +169,13 @@ class _InProcessScreenState extends State<InProcessScreen> {
                 Text(
                   e.task_name,
                   style: TextStyle(fontSize: 12.0, fontWeight: FontWeight.w600),
+                ),
+                SizedBox(
+                  height: 5,
+                ),
+                Text(
+                  e.task_description,
+                  style: TextStyle(fontSize: 12.0, fontWeight: FontWeight.w400),
                 ),
                 SizedBox(
                   height: 10,

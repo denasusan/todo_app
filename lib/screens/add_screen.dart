@@ -2,7 +2,9 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:todo_app/model/label.dart';
 import 'package:todo_app/model/task.dart';
+import 'package:todo_app/screens/login_screen.dart';
 import 'package:todo_app/screens/todo_screen.dart';
+import 'package:todo_app/services/shared_preference_service.dart';
 
 class AddScreen extends StatefulWidget {
   AddScreen({Key? key}) : super(key: key);
@@ -14,8 +16,9 @@ class AddScreen extends StatefulWidget {
 class _AddScreenState extends State<AddScreen> {
   DateTime _startDate = DateTime.now();
   DateTime _endDate = DateTime.now();
-  String _name = "", _description = "";
-  String labelChoosed = "";
+  TextEditingController _nameController = TextEditingController();
+  TextEditingController _descriptionController = TextEditingController();
+  String _labelChoosedController = "";
   List<Label> labelList = [];
 
   initState() {
@@ -49,56 +52,77 @@ class _AddScreenState extends State<AddScreen> {
   }
 
   void addTaskByModel() async {
+    final SharedPreferencesService pref =
+        await SharedPreferencesService.getInstance();
+    String email = "";
     final FirebaseFirestore db = FirebaseFirestore.instance;
-    DocumentReference user_id =
-        db.collection('users').doc('rkHhSJzDvgmKJ6whbCax');
-    DocumentReference label_id = db.collection('labels').doc(labelChoosed);
-    String task_id = DateTime.now().millisecondsSinceEpoch.toString();
-    final taskData = Task(
-        task_id: task_id,
-        task_name: _name,
-        task_description: _description,
-        task_status: "new",
-        user_id: user_id,
-        label_id: label_id,
-        is_visible: true,
-        start_date: _startDate,
-        due_date: _endDate);
-    final docRef = db.collection('tasks').withConverter(
-        fromFirestore: Task.fromFirestore,
-        toFirestore: (Task task, options) => task.toFirestore());
-    await docRef.doc(task_id).set(taskData).then((value) => {
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(
-              builder: (context) => TodoScreen(
-                tab: 0,
+
+    if (pref.getData('is_login')) {
+      email = pref.getData('email');
+      DocumentReference user_id = db.collection('users').doc(email);
+      DocumentReference label_id =
+          db.collection('labels').doc(_labelChoosedController);
+      String task_id = DateTime.now().millisecondsSinceEpoch.toString();
+      final taskData = Task(
+          task_id: task_id,
+          task_name: _nameController.text,
+          task_description: _descriptionController.text,
+          task_status: "new",
+          user_id: user_id,
+          label_id: label_id,
+          sharedWith: [email],
+          is_visible: true,
+          start_date: _startDate,
+          due_date: _endDate);
+      final docRef = db.collection('tasks').withConverter(
+          fromFirestore: Task.fromFirestore,
+          toFirestore: (Task task, options) => task.toFirestore());
+      await docRef.doc(task_id).set(taskData).then((value) => {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(
+                builder: (context) => TodoScreen(
+                  tab: 0,
+                ),
               ),
-            ),
-          )
-        });
+            )
+          });
+    } else {
+      Navigator.push(context,
+          MaterialPageRoute(builder: (context) => const LoginScreen()));
+    }
   }
 
   void getLabelByUser() async {
     final FirebaseFirestore db = FirebaseFirestore.instance;
+    final SharedPreferencesService pref =
+        await SharedPreferencesService.getInstance();
+    String email = "";
 
-    // final userData = User(user_email: "fikri@gmail.com", user_name: "Fikri New");
-    final docRef = db.collection('labels');
-    docRef.get().then(
-      (querySnapshot) {
-        for (var docSnapshot in querySnapshot.docs) {
-          labelChoosed = docSnapshot.id;
-          Label label = new Label(
-              label_id: docSnapshot.id,
-              label_name: docSnapshot.data()['label_name'],
-              label_color: docSnapshot.data()['label_color']);
-          labelList.add(label);
-          print(label.label_name);
-        }
-        setState(() {});
-      },
-      onError: (e) => print("Error completing: $e"),
-    );
+    if (pref.getData('is_login')) {
+      email = pref.getData('email');
+      DocumentReference user_id = db.collection('users').doc(email);
+
+      final docRef =
+          db.collection('labels').where("user_id", isEqualTo: user_id);
+      docRef.get().then(
+        (querySnapshot) {
+          for (var docSnapshot in querySnapshot.docs) {
+            _labelChoosedController = docSnapshot.id;
+            Label label = new Label(
+                label_id: docSnapshot.id,
+                label_name: docSnapshot.data()['label_name'],
+                label_color: docSnapshot.data()['label_color']);
+            labelList.add(label);
+          }
+          setState(() {});
+        },
+        onError: (e) => print("Error completing: $e"),
+      );
+    } else {
+      Navigator.push(context,
+          MaterialPageRoute(builder: (context) => const LoginScreen()));
+    }
   }
 
   @override
@@ -137,7 +161,7 @@ class _AddScreenState extends State<AddScreen> {
               onChanged: (value) => {
                 setState(
                   () {
-                    _name = value;
+                    _nameController.text = value;
                   },
                 )
               },
@@ -178,7 +202,7 @@ class _AddScreenState extends State<AddScreen> {
             Text('Label'),
             DropdownButtonHideUnderline(
               child: DropdownButton<String>(
-                value: labelChoosed,
+                value: _labelChoosedController,
                 dropdownColor: Colors.white,
                 style: TextStyle(color: Color(0xFF001A72)),
                 icon: Icon(Icons.arrow_drop_down_circle_sharp),
@@ -195,9 +219,15 @@ class _AddScreenState extends State<AddScreen> {
                                     height: 24.0,
                                     decoration: BoxDecoration(
                                       borderRadius: BorderRadius.circular(100),
-                                      color: e.label_color == "4EA949"
-                                          ? Color(0xFF4EA949)
-                                          : Colors.blue,
+                                      color: e.label_color.toLowerCase() == "3498db"
+                                          ? Color(0xFF3498db)
+                                          : e.label_color.toLowerCase() == "2ecc71"
+                                              ? Color(0xFF2ecc71)
+                                              : e.label_color.toLowerCase() == "f1c40f"
+                                                  ? Color(0xFFf1c40f)
+                                                  : e.label_color.toLowerCase() == "e74c3c"
+                                                      ? Color(0xFFe74c3c)
+                                                      : Colors.blue,
                                     ),
                                   ),
                                   Text(e.label_name),
@@ -206,7 +236,7 @@ class _AddScreenState extends State<AddScreen> {
                         ))
                     .toList(),
                 onChanged: (String? value) {
-                  labelChoosed = value!;
+                  _labelChoosedController = value!;
                   setState(() {});
                 },
               ),
@@ -222,7 +252,7 @@ class _AddScreenState extends State<AddScreen> {
               onChanged: (value) => {
                 setState(
                   () {
-                    _description = value;
+                    _descriptionController.text = value;
                   },
                 )
               },

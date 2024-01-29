@@ -131,6 +131,7 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       home: const IntroPage(),
+      title: "KanbanWa",
       theme: ThemeData(fontFamily: 'Poppins'),
     );
   }

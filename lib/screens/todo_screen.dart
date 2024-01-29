@@ -1,13 +1,15 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:todo_app/components/done_screen.dart';
-import 'package:todo_app/components/in_process_screen.dart';
+import 'package:todo_app/components/in_progress.dart';
 import 'package:todo_app/home.dart';
 import 'package:todo_app/main.dart';
 import 'package:todo_app/model/label.dart';
 import 'package:todo_app/model/task.dart';
 import 'package:todo_app/screens/add_screen.dart';
 import 'package:todo_app/screens/edit_screen.dart';
+import 'package:todo_app/screens/login_screen.dart';
+import 'package:todo_app/services/shared_preference_service.dart';
 
 class TodoScreen extends StatefulWidget {
   final int tab;
@@ -47,30 +49,40 @@ class _TodoScreenState extends State<TodoScreen> {
 
   void getTasksByUser() async {
     final FirebaseFirestore db = FirebaseFirestore.instance;
+    final SharedPreferencesService pref =
+        await SharedPreferencesService.getInstance();
+    String email = "";
 
-    // final userData = User(user_email: "fikri@gmail.com", user_name: "Fikri New");
-    final docRef =
-        db.collection('tasks').where("task_status", isEqualTo: "new");
-    docRef.get().then(
-      (querySnapshot) {
-        for (var docSnapshot in querySnapshot.docs) {
-          Task task = new Task(
-              task_id: docSnapshot?.id as String,
-              task_name: docSnapshot?.data()['task_name'] as String,
-              task_description:
-                  docSnapshot?.data()['task_description'] as String,
-              task_status: docSnapshot?.data()['task_status'] as String,
-              user_id: docSnapshot?.data()['user_id'] as DocumentReference,
-              label_id: docSnapshot?.data()['label_id'] as DocumentReference,
-              is_visible: docSnapshot?.data()['is_visible'] as bool,
-              start_date: docSnapshot?.data()['start_date'].toDate(),
-              due_date: docSnapshot?.data()['due_date'].toDate());
-          taskListDoneScreen.add(task);
-        }
-        setState(() {});
-      },
-      onError: (e) => print("Error completing: $e"),
-    );
+    if (pref.getData('is_login')) {
+      email = pref.getData('email');
+      final docRef = db
+          .collection('tasks')
+          .where("task_status", isEqualTo: "new")
+          .where("sharedWith", arrayContains: email);
+      docRef.get().then(
+        (querySnapshot) {
+          for (var docSnapshot in querySnapshot.docs) {
+            Task task = new Task(
+                task_id: docSnapshot?.id as String,
+                task_name: docSnapshot?.data()['task_name'] as String,
+                task_description:
+                    docSnapshot?.data()['task_description'] as String,
+                task_status: docSnapshot?.data()['task_status'] as String,
+                user_id: docSnapshot?.data()['user_id'] as DocumentReference,
+                label_id: docSnapshot?.data()['label_id'] as DocumentReference,
+                is_visible: docSnapshot?.data()['is_visible'] as bool,
+                start_date: docSnapshot?.data()['start_date'].toDate(),
+                due_date: docSnapshot?.data()['due_date'].toDate());
+            taskListDoneScreen.add(task);
+          }
+          setState(() {});
+        },
+        onError: (e) => print("Error completing: $e"),
+      );
+    } else {
+      Navigator.push(context,
+          MaterialPageRoute(builder: (context) => const LoginScreen()));
+    }
   }
 
   Future<Label> getLabelByReference(String docInput) async {
@@ -134,7 +146,7 @@ class _TodoScreenState extends State<TodoScreen> {
           _selectedTab == 0
               ? 'To Do List'
               : _selectedTab == 1
-                  ? "In Process List"
+                  ? "In Progress List"
                   : "Done List",
           style: TextStyle(
               fontSize: 20.0,
@@ -209,7 +221,24 @@ class _TodoScreenState extends State<TodoScreen> {
                                                     color: Colors.white),
                                               ),
                                             ),
-                                            color: Color(0xFF58C952),
+                                            color: snapshot.data!.label_color
+                                                        .toLowerCase() ==
+                                                    "3498db"
+                                                ? Color(0xFF3498db)
+                                                : snapshot.data!.label_color
+                                                            .toLowerCase() ==
+                                                        "2ecc71"
+                                                    ? Color(0xFF2ecc71)
+                                                    : snapshot.data!.label_color
+                                                                .toLowerCase() ==
+                                                            "f1c40f"
+                                                        ? Color(0xFFf1c40f)
+                                                        : snapshot.data!
+                                                                    .label_color
+                                                                    .toLowerCase() ==
+                                                                "e74c3c"
+                                                            ? Color(0xFFe74c3c)
+                                                            : Colors.blue,
                                             elevation: 2.0,
                                           ),
                                         );
@@ -228,6 +257,14 @@ class _TodoScreenState extends State<TodoScreen> {
                               e.task_name,
                               style: TextStyle(
                                   fontSize: 12.0, fontWeight: FontWeight.w600),
+                            ),
+                            SizedBox(
+                              height: 5,
+                            ),
+                            Text(
+                              e.task_description,
+                              style: TextStyle(
+                                  fontSize: 12.0, fontWeight: FontWeight.w400),
                             ),
                             SizedBox(
                               height: 10,
@@ -396,14 +433,14 @@ class _TodoScreenState extends State<TodoScreen> {
                         ),
                         SizedBox(height: 5.0),
                         Text(
-                          "On Progress",
+                          "In Progress",
                           style: TextStyle(
                               fontSize: 10.0,
                               fontWeight: FontWeight.w600,
                               color: Colors.white),
                         )
                       ]),
-                label: "On Progress",
+                label: "In Progress",
               ),
               BottomNavigationBarItem(
                 icon: _selectedTab == 2

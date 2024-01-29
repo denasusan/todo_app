@@ -124,6 +124,7 @@ class _HomeScreenState extends State<HomeScreen> {
         _username = pref.getData('username') ?? "";
         _email = pref.getData('email');
       });
+      getCountTasksByUser();
     } else {
       Navigator.push(context,
           MaterialPageRoute(builder: (context) => const LoginScreen()));
@@ -132,9 +133,15 @@ class _HomeScreenState extends State<HomeScreen> {
 
   void getCountTasksByUser() async {
     final FirebaseFirestore db = FirebaseFirestore.instance;
-    final allTaskCount = db.collection('tasks').count();
-    final waitingTaskCount =
-        db.collection('tasks').where("task_status", isEqualTo: "done").count();
+    final allTaskCount = db
+        .collection('tasks')
+        .where("sharedWith", arrayContains: _email)
+        .count();
+    final waitingTaskCount = db
+        .collection('tasks')
+        .where("task_status", isEqualTo: "done")
+        .where("sharedWith", arrayContains: _email)
+        .count();
 
     final AggregateQuerySnapshot snapshotAll = await allTaskCount.get();
     final AggregateQuerySnapshot snapshotWaiting = await waitingTaskCount.get();
@@ -147,7 +154,6 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
-    getCountTasksByUser();
     _getUserData();
   }
 
@@ -253,7 +259,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       mainAxisAlignment: MainAxisAlignment.spaceAround,
                       children: [
                         Text(
-                          "Today, \n${DateTime.now().day}, ${month[DateTime.now().month - 1]} ${DateTime.now().year}",
+                          "Today, \n${DateTime.now().day} ${month[DateTime.now().month - 1]} ${DateTime.now().year}",
                           style: TextStyle(
                               color: BLACK_CUSTOM,
                               fontSize: 13.0,
