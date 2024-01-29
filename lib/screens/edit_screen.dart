@@ -2,8 +2,10 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:todo_app/model/user.dart';
 import 'package:todo_app/screens/todo_screen.dart';
-import 'package:flutter_typeahead/flutter_typeahead.dart';
 import 'package:todo_app/model/task.dart';
+import 'package:todo_app/services/shared_preference_service.dart';
+import 'package:todo_app/model/label.dart';
+import 'package:todo_app/screens/login_screen.dart';
 
 class EditScreen extends StatefulWidget {
   final Task task;
@@ -24,6 +26,8 @@ class _EditScreenState extends State<EditScreen> {
   String _assignedTo = '';
   List<String> _suggestions = [];
   List<dynamic> _assignToList = [];
+  String _labelChoosedController = "";
+  List<Label> labelList = [];
 
   TextEditingController _nameController = TextEditingController();
   TextEditingController _labelController = TextEditingController();
@@ -44,6 +48,39 @@ class _EditScreenState extends State<EditScreen> {
     _labelController.text = widget.task.label_id.id;
     _descriptionController.text = widget.task.task_description;
     _assignToController.text = _assignedTo;
+    getLabelByUser();
+  }
+
+  void getLabelByUser() async {
+    final FirebaseFirestore db = FirebaseFirestore.instance;
+    final SharedPreferencesService pref =
+        await SharedPreferencesService.getInstance();
+    String email = "";
+
+    if (pref.getData('is_login')) {
+      email = pref.getData('email');
+      DocumentReference user_id = db.collection('users').doc(email);
+
+      final docRef =
+          db.collection('labels').where("user_id", isEqualTo: user_id);
+      docRef.get().then(
+        (querySnapshot) {
+          for (var docSnapshot in querySnapshot.docs) {
+            _labelChoosedController = docSnapshot.id;
+            Label label = new Label(
+                label_id: docSnapshot.id,
+                label_name: docSnapshot.data()['label_name'],
+                label_color: docSnapshot.data()['label_color']);
+            labelList.add(label);
+          }
+          setState(() {});
+        },
+        onError: (e) => print("Error completing: $e"),
+      );
+    } else {
+      Navigator.push(context,
+          MaterialPageRoute(builder: (context) => const LoginScreen()));
+    }
   }
 
   void updateSuggestions(String text) {
@@ -176,10 +213,50 @@ class _EditScreenState extends State<EditScreen> {
             ),
             SizedBox(height: 8),
             Text('Label'),
-            TextField(
-              controller: _labelController,
-              decoration: InputDecoration(
-                border: OutlineInputBorder(),
+            DropdownButtonHideUnderline(
+              child: DropdownButton<String>(
+                value: _labelChoosedController,
+                dropdownColor: Colors.white,
+                style: TextStyle(color: Color(0xFF001A72)),
+                icon: Icon(Icons.arrow_drop_down_circle_sharp),
+                items: labelList
+                    .map((e) => DropdownMenuItem<String>(
+                          value: e.label_id,
+                          child: Container(
+                              padding: EdgeInsets.only(left: 10.0),
+                              child: Row(
+                                children: [
+                                  Container(
+                                    margin: EdgeInsets.only(right: 5.0),
+                                    width: 24.0,
+                                    height: 24.0,
+                                    decoration: BoxDecoration(
+                                      borderRadius: BorderRadius.circular(100),
+                                      color: e.label_color.toLowerCase() ==
+                                              "3498db"
+                                          ? Color(0xFF3498db)
+                                          : e.label_color.toLowerCase() ==
+                                                  "2ecc71"
+                                              ? Color(0xFF2ecc71)
+                                              : e.label_color.toLowerCase() ==
+                                                      "f1c40f"
+                                                  ? Color(0xFFf1c40f)
+                                                  : e.label_color
+                                                              .toLowerCase() ==
+                                                          "e74c3c"
+                                                      ? Color(0xFFe74c3c)
+                                                      : Colors.blue,
+                                    ),
+                                  ),
+                                  Text(e.label_name),
+                                ],
+                              )),
+                        ))
+                    .toList(),
+                onChanged: (String? value) {
+                  _labelChoosedController = value!;
+                  setState(() {});
+                },
               ),
             ),
             SizedBox(height: 16),
@@ -236,12 +313,19 @@ class _EditScreenState extends State<EditScreen> {
                 updateSuggestions(text);
               },
             ),
-            _assignToList.length > 0 ? Text('Assigned To') : SizedBox(height: 2.0,),
+            _assignToList.length > 0
+                ? Text('Assigned To')
+                : SizedBox(
+                    height: 2.0,
+                  ),
             Wrap(
               children: _assignToList.length > 0
                   ? _assignToList
                       .map(
-                        (e) => Container(margin: EdgeInsets.only(right: 10.0, top: 5.0), child: ElevatedButton(onPressed: () => {}, child: Text('${e}'))),
+                        (e) => Container(
+                            margin: EdgeInsets.only(right: 10.0, top: 5.0),
+                            child: ElevatedButton(
+                                onPressed: () => {}, child: Text('${e}'))),
                       )
                       .toList()
                   : [],
