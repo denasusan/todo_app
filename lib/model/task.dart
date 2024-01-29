@@ -10,7 +10,7 @@ class Task {
   final bool is_visible;
   final DateTime start_date;
   final DateTime due_date;
-  final List<String> sharedWith;
+  final List<dynamic> sharedWith;
 
   Task({
     required this.task_id,
@@ -22,8 +22,8 @@ class Task {
     required this.is_visible,
     required this.start_date,
     required this.due_date,
-    List<String>? sharedWith,
-  }) : sharedWith = sharedWith ?? [];
+    required this.sharedWith,
+  });
   factory Task.fromJson(Map<String, dynamic>? json) {
     return Task(
       task_id: json?['task_id'] as String,
@@ -35,7 +35,7 @@ class Task {
       is_visible: json?["is_visible"] as bool,
       start_date: json?["start_date"] as DateTime,
       due_date: json?["due_date"] as DateTime,
-      sharedWith: List<String>.from(json?['sharedWith'] ?? []),
+      sharedWith: json?["sharedWith"] as List<dynamic>,
     );
   }
   Map<String, Object> toJson() {
@@ -67,7 +67,7 @@ class Task {
       is_visible: data?["is_visible"],
       start_date: data?["start_date"],
       due_date: data?["due_date"],
-      sharedWith: List<String>.from(data?['sharedWith'] ?? []),
+      sharedWith: data?['sharedWith'],
     );
   }
 

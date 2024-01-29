@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:todo_app/model/user.dart';
 import 'package:todo_app/screens/todo_screen.dart';
 import 'package:flutter_typeahead/flutter_typeahead.dart';
 import 'package:todo_app/model/task.dart';
@@ -18,9 +19,11 @@ class _EditScreenState extends State<EditScreen> {
   late DateTime _endDate;
   late String _status;
   late bool _isAssigned;
+  List<User> _assignes = [];
   final TextEditingController _assignToController = TextEditingController();
   String _assignedTo = '';
   List<String> _suggestions = [];
+  List<dynamic> _assignToList = [];
 
   TextEditingController _nameController = TextEditingController();
   TextEditingController _labelController = TextEditingController();
@@ -36,7 +39,7 @@ class _EditScreenState extends State<EditScreen> {
     _assignedTo = widget.task.sharedWith.isNotEmpty
         ? widget.task.sharedWith.join(', ')
         : '';
-
+    _assignToList = widget.task.sharedWith.toList();
     _nameController.text = widget.task.task_name;
     _labelController.text = widget.task.label_id.id;
     _descriptionController.text = widget.task.task_description;
@@ -232,6 +235,16 @@ class _EditScreenState extends State<EditScreen> {
               onChanged: (text) {
                 updateSuggestions(text);
               },
+            ),
+            _assignToList.length > 0 ? Text('Assigned To') : SizedBox(height: 2.0,),
+            Wrap(
+              children: _assignToList.length > 0
+                  ? _assignToList
+                      .map(
+                        (e) => Container(margin: EdgeInsets.only(right: 10.0, top: 5.0), child: ElevatedButton(onPressed: () => {}, child: Text('${e}'))),
+                      )
+                      .toList()
+                  : [],
             ),
             Column(
               children: _suggestions

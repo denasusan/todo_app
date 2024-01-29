@@ -52,6 +52,7 @@ class _InProcessScreenState extends State<InProcessScreen> {
                 label_id: docSnapshot?.data()['label_id'] as DocumentReference,
                 is_visible: docSnapshot?.data()['is_visible'] as bool,
                 start_date: docSnapshot?.data()['start_date'].toDate(),
+                sharedWith: docSnapshot?.data()['sharedWith'] as List<dynamic>,
                 due_date: docSnapshot?.data()['due_date'].toDate());
             taskList.add(task);
           }
