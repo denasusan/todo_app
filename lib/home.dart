@@ -441,7 +441,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                 height: 8.0,
                               ),
                               Text(
-                                "In Process",
+                                "In Progress",
                                 style: TextStyle(
                                   color: Colors.white,
                                   fontSize: 12.0,
