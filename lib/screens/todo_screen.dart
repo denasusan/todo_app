@@ -55,10 +55,12 @@ class _TodoScreenState extends State<TodoScreen> {
 
     if (pref.getData('is_login')) {
       email = pref.getData('email');
+      final userId = db.collection('users').doc(email);
       final docRef = db
           .collection('tasks')
           .where("task_status", isEqualTo: "new")
-          .where("sharedWith", arrayContains: email);
+          .where("sharedWith", arrayContains: email)
+          .where("user_id", isEqualTo: userId);
       docRef.get().then(
         (querySnapshot) {
           for (var docSnapshot in querySnapshot.docs) {

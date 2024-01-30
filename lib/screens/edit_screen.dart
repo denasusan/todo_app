@@ -29,6 +29,7 @@ class _EditScreenState extends State<EditScreen> {
   String _labelChoosedController = "";
   List<Label> labelList = [];
   bool isTextFieldEnabled = false;
+  List<String> _statuses = ["new", "in progress", "done"];
 
   TextEditingController _nameController = TextEditingController();
   TextEditingController _labelController = TextEditingController();
@@ -41,9 +42,7 @@ class _EditScreenState extends State<EditScreen> {
     _endDate = widget.task.due_date;
     _status = widget.task.task_status;
     _isAssigned = widget.task.is_visible;
-    _assignedTo = widget.task.sharedWith.isNotEmpty
-        ? widget.task.sharedWith.join(', ')
-        : '';
+    _assignedTo = '';
     _assignToList = widget.task.sharedWith.toList();
     _nameController.text = widget.task.task_name;
     _labelController.text = widget.task.label_id.id;
@@ -385,7 +384,8 @@ class _EditScreenState extends State<EditScreen> {
                         onTap: () {
                           setState(() {
                             _assignedTo = suggestion;
-                            _assignToController.text = suggestion;
+                            _assignToController.text = "";
+                            _assignToList.add(suggestion);
                             _suggestions = [];
                           });
                         },
@@ -397,35 +397,23 @@ class _EditScreenState extends State<EditScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text('Status'),
-                FutureBuilder<List<String>>(
-                  future: getStatusValuesFromDatabase(),
-                  builder: (context, snapshot) {
-                    if (snapshot.connectionState == ConnectionState.waiting) {
-                      return CircularProgressIndicator();
-                    } else if (snapshot.hasError) {
-                      return Text('Error: ${snapshot.error}');
-                    } else {
-                      return DropdownButtonFormField<String>(
-                        decoration: InputDecoration(
-                          border: OutlineInputBorder(),
-                        ),
-                        value: _status,
-                        items: snapshot.data?.map((status) {
-                              return DropdownMenuItem(
-                                value: status,
-                                child: Text(status),
-                              );
-                            }).toList() ??
-                            [],
-                        onChanged: (value) {
-                          setState(() {
-                            _status = value!;
-                          });
-                        },
-                      );
-                    }
+                DropdownButtonFormField<String>(
+                  decoration: InputDecoration(
+                    border: OutlineInputBorder(),
+                  ),
+                  value: _status,
+                  items: _statuses
+                      .map((e) => DropdownMenuItem(
+                            value: e,
+                            child: Text(e),
+                          ))
+                      .toList(),
+                  onChanged: (value) {
+                    setState(() {
+                      _status = value!;
+                    });
                   },
-                ),
+                )
               ],
             ),
             SizedBox(height: 16),
@@ -463,9 +451,7 @@ class _EditScreenState extends State<EditScreen> {
         user_id: widget.task.user_id,
         label_id: FirebaseFirestore.instance.doc('labels/$selectedLabelId'),
         is_visible: _isAssigned,
-        sharedWith: _assignToController.text.isNotEmpty
-            ? [_assignToController.text]
-            : [],
+        sharedWith: _assignToList.length > 0 ? _assignToList : [],
       );
 
       await FirebaseFirestore.instance
