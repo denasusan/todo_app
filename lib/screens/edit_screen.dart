@@ -63,22 +63,24 @@ class _EditScreenState extends State<EditScreen> {
       email = pref.getData('email');
       DocumentReference user_id = db.collection('users').doc(email);
 
-      final docRef =
-          db.collection('labels').where("user_id", isEqualTo: user_id);
-      docRef.get().then(
-        (querySnapshot) {
-          for (var docSnapshot in querySnapshot.docs) {
-            _labelChoosedController = docSnapshot.id;
-            Label label = new Label(
-                label_id: docSnapshot.id,
-                label_name: docSnapshot.data()['label_name'],
-                label_color: docSnapshot.data()['label_color']);
-            labelList.add(label);
-          }
-          setState(() {});
-        },
-        onError: (e) => print("Error completing: $e"),
-      );
+      final labelsSnapshot = await db
+          .collection('labels')
+          .where("user_id", isEqualTo: user_id)
+          .get();
+
+      String taskLabelId = widget.task.label_id.id;
+
+      _labelChoosedController = taskLabelId;
+
+      labelList = labelsSnapshot.docs.map((docSnapshot) {
+        return Label(
+          label_id: docSnapshot.id,
+          label_name: docSnapshot.data()['label_name'],
+          label_color: docSnapshot.data()['label_color'],
+        );
+      }).toList();
+
+      setState(() {});
     } else {
       Navigator.push(context,
           MaterialPageRoute(builder: (context) => const LoginScreen()));
@@ -449,6 +451,8 @@ class _EditScreenState extends State<EditScreen> {
 
   void saveChanges() async {
     try {
+      String selectedLabelId = _labelChoosedController;
+
       Task updatedTask = Task(
         task_id: widget.task.task_id,
         task_name: _nameController.text,
@@ -457,7 +461,7 @@ class _EditScreenState extends State<EditScreen> {
         task_description: _descriptionController.text,
         task_status: _status,
         user_id: widget.task.user_id,
-        label_id: widget.task.label_id,
+        label_id: FirebaseFirestore.instance.doc('labels/$selectedLabelId'),
         is_visible: _isAssigned,
         sharedWith: _assignToController.text.isNotEmpty
             ? [_assignToController.text]
