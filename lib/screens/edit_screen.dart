@@ -62,44 +62,60 @@ class _EditScreenState extends State<EditScreen> {
       email = pref.getData('email');
       DocumentReference user_id = db.collection('users').doc(email);
 
-      final labelsSnapshot = await db
-          .collection('labels')
-          .where("user_id", isEqualTo: user_id)
-          .get();
-
       String taskLabelId = widget.task.label_id.id;
 
       _labelChoosedController = taskLabelId;
 
-      labelsSnapshot.docs.map((docSnapshot) {
-        Label label = new Label(
-          label_id: docSnapshot.id,
-          label_name: docSnapshot.data()['label_name'],
-          label_color: docSnapshot.data()['label_color'],
+      print(user_id);
+
+      if (user_id == widget.task.user_id) {
+        final docRef =
+            db.collection('labels').where("user_id", isEqualTo: user_id);
+
+        docRef.get().then(
+          (querySnapshot) {
+            print(querySnapshot.docs.length);
+            if (querySnapshot.docs.isNotEmpty) {
+              for (var docSnapshot in querySnapshot.docs) {
+                // _labelChoosedController = docSnapshot.id;
+                Label label = new Label(
+                    label_id: docSnapshot.id,
+                    label_name: docSnapshot.data()['label_name'],
+                    label_color: docSnapshot.data()['label_color']);
+                labelList.add(label);
+              }
+            } else {
+              print("kesini");
+              Label label = new Label(
+                  label_id: "1", label_name: "", label_color: "02342e");
+              labelList.add(label);
+            }
+            setState(() {});
+          },
+          onError: (e) => print("Error completing: $e"),
         );
-        labelList.add(label);
-      });
-
-      // if (labelList.length < 1) {
-        final labelsSnapshotLAbelByTask = await db.collection('labels').doc(taskLabelId);
-
-        Label label = await labelsSnapshotLAbelByTask.get().then((querySnapshot) {
-          if (querySnapshot.exists) {
-            return Label(
-              label_id: querySnapshot.id,
-              label_name: querySnapshot.data()!['label_name'],
-              label_color: querySnapshot.data()!['label_color'],
-            );
-          }
-          return Label(label_id: "", label_name: "", label_color: "");
-        });
-
-        labelList.add(label);
-      // }
-
-      print(labelList);
-
-      setState(() {});
+      } else {
+        final docRef = db.collection('labels').doc(taskLabelId);
+        docRef.get().then(
+          (querySnapshot) {
+            if (querySnapshot.exists) {
+              // _labelChoosedController = docSnapshot.id;
+              Label label = new Label(
+                  label_id: querySnapshot.id,
+                  label_name: querySnapshot.data()!['label_name'],
+                  label_color: querySnapshot.data()!['label_color']);
+              labelList.add(label);
+            } else {
+              print("kesini 2");
+              Label label = new Label(
+                  label_id: "1", label_name: "", label_color: "02342e");
+              labelList.add(label);
+            }
+            setState(() {});
+          },
+          onError: (e) => print("Error completing: $e"),
+        );
+      }
     } else {
       Navigator.push(context,
           MaterialPageRoute(builder: (context) => const LoginScreen()));
@@ -307,14 +323,13 @@ class _EditScreenState extends State<EditScreen> {
                                 ],
                               )),
                         ))
-                    .toList() ,
+                    .toList(),
                 onChanged: (String? value) {
                   _labelChoosedController = value!;
                   setState(() {});
                 },
               ),
             ),
-            
             SizedBox(height: 16),
             Text('Description'),
             SizedBox(height: 8),

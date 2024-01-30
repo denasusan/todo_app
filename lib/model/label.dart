@@ -40,4 +40,9 @@ class Label {
       "label_color": label_color,
     };
   }
+
+  @override
+  String toString() {
+    return '{label_color: $label_color, label_name: $label_name}';
+  }
 }

@@ -59,8 +59,8 @@ class _TodoScreenState extends State<TodoScreen> {
       final docRef = db
           .collection('tasks')
           .where("task_status", isEqualTo: "new")
-          .where("sharedWith", arrayContains: email)
-          .where("user_id", isEqualTo: userId);
+          .where(Filter.or(Filter("sharedWith", arrayContains: email),
+              Filter("user_id", isEqualTo: userId)));
       docRef.get().then(
         (querySnapshot) {
           for (var docSnapshot in querySnapshot.docs) {

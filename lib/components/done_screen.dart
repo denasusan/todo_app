@@ -31,10 +31,13 @@ class _DoneScreenState extends State<DoneScreen> {
 
     if (pref.getData('is_login')) {
       email = pref.getData('email');
+      final userId = db.collection('users').doc(email);
+
       final docRef = db
           .collection('tasks')
           .where("task_status", isEqualTo: "done")
-          .where("sharedWith", arrayContains: email);
+          .where(Filter.or(Filter("sharedWith", arrayContains: email),
+              Filter("user_id", isEqualTo: userId)));
       docRef.get().then(
         (querySnapshot) {
           for (var docSnapshot in querySnapshot.docs) {
