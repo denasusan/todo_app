@@ -301,49 +301,59 @@ class _EditScreenState extends State<EditScreen> {
               enabled: isTextFieldEnabled,
             ),
             SizedBox(height: 8),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text('Is Assign'),
-                Row(
-                  children: [
-                    Radio(
-                      value: true,
-                      groupValue: _isAssigned,
-                      onChanged: (value) {
-                        setState(() {
-                          _isAssigned = value as bool;
-                        });
-                      },
-                    ),
-                    Text('True'),
-                    SizedBox(width: 16),
-                    Radio(
-                      value: false,
-                      groupValue: _isAssigned,
-                      onChanged: (value) {
-                        setState(() {
-                          _isAssigned = value as bool;
-                        });
-                      },
-                    ),
-                    Text('False'),
-                  ],
-                ),
-              ],
+            Visibility(
+              visible: isTextFieldEnabled,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('Is Assign'),
+                  Row(
+                    children: [
+                      Radio(
+                        value: true,
+                        groupValue: _isAssigned,
+                        onChanged: (value) {
+                          setState(() {
+                            _isAssigned = value as bool;
+                          });
+                        },
+                      ),
+                      Text('True'),
+                      SizedBox(width: 16),
+                      Radio(
+                        value: false,
+                        groupValue: _isAssigned,
+                        onChanged: (value) {
+                          setState(() {
+                            _isAssigned = value as bool;
+                          });
+                        },
+                      ),
+                      Text('False'),
+                    ],
+                  ),
+                ],
+              ),
             ),
             SizedBox(height: 4),
-            Text('Assign To'),
-            TextField(
-              controller: _assignToController,
-              decoration: InputDecoration(
-                border: OutlineInputBorder(),
-                hintText: 'Search user',
+            Visibility(
+              visible: isTextFieldEnabled,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('Assign To'),
+                  TextField(
+                    controller: _assignToController,
+                    decoration: InputDecoration(
+                      border: OutlineInputBorder(),
+                      hintText: 'Search user',
+                    ),
+                    onChanged: (text) {
+                      updateSuggestions(text);
+                    },
+                  ),
+                ],
               ),
-              onChanged: (text) {
-                updateSuggestions(text);
-              },
-              enabled: isTextFieldEnabled,
             ),
             _assignToList.length > 0
                 ? Text('Assigned To')
