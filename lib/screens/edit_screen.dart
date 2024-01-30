@@ -214,7 +214,9 @@ class _EditScreenState extends State<EditScreen> {
               children: [
                 Expanded(
                   child: InkWell(
-                    onTap: () => _selectStartDate(context),
+                    onTap: isTextFieldEnabled
+                        ? () => _selectStartDate(context)
+                        : null,
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
@@ -228,7 +230,9 @@ class _EditScreenState extends State<EditScreen> {
                 SizedBox(width: 16),
                 Expanded(
                   child: InkWell(
-                    onTap: () => _selectEndDate(context),
+                    onTap: isTextFieldEnabled
+                        ? () => _selectEndDate(context)
+                        : null,
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
