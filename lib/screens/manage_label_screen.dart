@@ -188,14 +188,14 @@ class _ManageLabelScreenState extends State<ManageLabelScreen> {
     SharedPreferencesService pref =
         await SharedPreferencesService.getInstance();
     var userEmail = pref.getData('email');
-
+    final user_id = db.collection('users').doc(userEmail);
     final docref = db.collection('labels');
 
     if (docId.isEmpty) {
       await docref.doc().set({
         "label_name": labelName,
         "label_color": labelColor,
-        "user_id": userEmail
+        "user_id": user_id,
       });
     } else {
       await docref.doc(docId).update({
@@ -266,7 +266,10 @@ class _ManageLabelScreenState extends State<ManageLabelScreen> {
       body: StreamBuilder(
         stream: FirebaseFirestore.instance
             .collection('labels')
-            .where('user_id', isEqualTo: _userEmail)
+            .where('user_id',
+                isEqualTo: FirebaseFirestore.instance
+                    .collection('users')
+                    .doc(_userEmail))
             .snapshots(),
         builder: (context, snapshot) {
           if (snapshot.hasError) {
