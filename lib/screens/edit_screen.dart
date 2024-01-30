@@ -29,7 +29,6 @@ class _EditScreenState extends State<EditScreen> {
   String _labelChoosedController = "";
   List<Label> labelList = [];
   bool isTextFieldEnabled = false;
-  List<String> _statuses = ["new", "in progress", "done"];
 
   TextEditingController _nameController = TextEditingController();
   TextEditingController _labelController = TextEditingController();
@@ -42,7 +41,9 @@ class _EditScreenState extends State<EditScreen> {
     _endDate = widget.task.due_date;
     _status = widget.task.task_status;
     _isAssigned = widget.task.is_visible;
-    _assignedTo = '';
+    _assignedTo = widget.task.sharedWith.isNotEmpty
+        ? widget.task.sharedWith.join(', ')
+        : '';
     _assignToList = widget.task.sharedWith.toList();
     _nameController.text = widget.task.task_name;
     _labelController.text = widget.task.label_id.id;
@@ -71,13 +72,38 @@ class _EditScreenState extends State<EditScreen> {
 
       _labelChoosedController = taskLabelId;
 
-      labelList = labelsSnapshot.docs.map((docSnapshot) {
-        return Label(
-          label_id: docSnapshot.id,
-          label_name: docSnapshot.data()['label_name'],
-          label_color: docSnapshot.data()['label_color'],
-        );
-      }).toList();
+      if (labelList.length > 0) {
+        labelList = labelsSnapshot.docs.map((docSnapshot) {
+          return Label(
+            label_id: docSnapshot.id,
+            label_name: docSnapshot.data()['label_name'],
+            label_color: docSnapshot.data()['label_color'],
+          );
+        }).toList();
+      } else {
+        final labelsSnapshot = await db.collection('labels').doc(taskLabelId);
+
+        Label label = await labelsSnapshot.get().then((querySnapshot) {
+          if (querySnapshot.exists) {
+            return Label(
+              label_id: querySnapshot.id,
+              label_name: querySnapshot.data()!['label_name'],
+              label_color: querySnapshot.data()!['label_color'],
+            );
+          }
+          return Label(label_id: "", label_name: "", label_color: "");
+        });
+
+        labelList.add(label);
+
+        // labelList = labelsSnapshot.map((docSnapshot) {
+        //   return Label(
+        //     label_id: docSnapshot.id,
+        //     label_name: docSnapshot.data()['label_name'],
+        //     label_color: docSnapshot.data()['label_color'],
+        //   );
+        // }).toList();
+      }
 
       setState(() {});
     } else {
@@ -384,8 +410,7 @@ class _EditScreenState extends State<EditScreen> {
                         onTap: () {
                           setState(() {
                             _assignedTo = suggestion;
-                            _assignToController.text = "";
-                            _assignToList.add(suggestion);
+                            _assignToController.text = suggestion;
                             _suggestions = [];
                           });
                         },
@@ -397,23 +422,35 @@ class _EditScreenState extends State<EditScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text('Status'),
-                DropdownButtonFormField<String>(
-                  decoration: InputDecoration(
-                    border: OutlineInputBorder(),
-                  ),
-                  value: _status,
-                  items: _statuses
-                      .map((e) => DropdownMenuItem(
-                            value: e,
-                            child: Text(e),
-                          ))
-                      .toList(),
-                  onChanged: (value) {
-                    setState(() {
-                      _status = value!;
-                    });
+                FutureBuilder<List<String>>(
+                  future: getStatusValuesFromDatabase(),
+                  builder: (context, snapshot) {
+                    if (snapshot.connectionState == ConnectionState.waiting) {
+                      return CircularProgressIndicator();
+                    } else if (snapshot.hasError) {
+                      return Text('Error: ${snapshot.error}');
+                    } else {
+                      return DropdownButtonFormField<String>(
+                        decoration: InputDecoration(
+                          border: OutlineInputBorder(),
+                        ),
+                        value: _status,
+                        items: snapshot.data?.map((status) {
+                              return DropdownMenuItem(
+                                value: status,
+                                child: Text(status),
+                              );
+                            }).toList() ??
+                            [],
+                        onChanged: (value) {
+                          setState(() {
+                            _status = value!;
+                          });
+                        },
+                      );
+                    }
                   },
-                )
+                ),
               ],
             ),
             SizedBox(height: 16),
@@ -451,7 +488,9 @@ class _EditScreenState extends State<EditScreen> {
         user_id: widget.task.user_id,
         label_id: FirebaseFirestore.instance.doc('labels/$selectedLabelId'),
         is_visible: _isAssigned,
-        sharedWith: _assignToList.length > 0 ? _assignToList : [],
+        sharedWith: _assignToController.text.isNotEmpty
+            ? [_assignToController.text]
+            : [],
       );
 
       await FirebaseFirestore.instance
