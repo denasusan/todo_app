@@ -71,18 +71,19 @@ class _EditScreenState extends State<EditScreen> {
 
       _labelChoosedController = taskLabelId;
 
-      labelList = labelsSnapshot.docs.map((docSnapshot) {
-        return Label(
+      labelsSnapshot.docs.map((docSnapshot) {
+        Label label = new Label(
           label_id: docSnapshot.id,
           label_name: docSnapshot.data()['label_name'],
           label_color: docSnapshot.data()['label_color'],
         );
-      }).toList();
+        labelList.add(label);
+      });
 
-      if (labelList.length < 1) {
-        final labelsSnapshot = await db.collection('labels').doc(taskLabelId);
+      // if (labelList.length < 1) {
+        final labelsSnapshotLAbelByTask = await db.collection('labels').doc(taskLabelId);
 
-        Label label = await labelsSnapshot.get().then((querySnapshot) {
+        Label label = await labelsSnapshotLAbelByTask.get().then((querySnapshot) {
           if (querySnapshot.exists) {
             return Label(
               label_id: querySnapshot.id,
@@ -94,7 +95,7 @@ class _EditScreenState extends State<EditScreen> {
         });
 
         labelList.add(label);
-      }
+      // }
 
       print(labelList);
 
@@ -306,13 +307,14 @@ class _EditScreenState extends State<EditScreen> {
                                 ],
                               )),
                         ))
-                    .toList(),
+                    .toList() ,
                 onChanged: (String? value) {
                   _labelChoosedController = value!;
                   setState(() {});
                 },
               ),
             ),
+            
             SizedBox(height: 16),
             Text('Description'),
             SizedBox(height: 8),
