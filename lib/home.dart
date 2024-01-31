@@ -107,7 +107,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
     SharedPreferencesService pref =
         await SharedPreferencesService.getInstance();
-    pref.saveData('user_name', newUsername);
+    pref.saveData('username', newUsername);
     setState(() {
       _username = newUsername;
     });
@@ -174,14 +174,14 @@ class _HomeScreenState extends State<HomeScreen> {
               fontSize: 20.0,
               fontWeight: FontWeight.w600),
         ),
-        actions: [
-          Container(
-            margin:
-                EdgeInsets.only(top: 8.0, bottom: 4.0, left: 10.0, right: 10.0),
-            child: const Image(
-                image: AssetImage('assets/images/notification_icon.png')),
-          )
-        ],
+        // actions: [
+        //   Container(
+        //     margin:
+        //         EdgeInsets.only(top: 8.0, bottom: 4.0, left: 10.0, right: 10.0),
+        //     child: const Image(
+        //         image: AssetImage('assets/images/notification_icon.png')),
+        //   )
+        // ],
       ),
       body: Container(
         color: Colors.white,
